@@ -1,0 +1,56 @@
+// optional (see JavaCC documentation or use same as in textbook’s example)
+options {
+  IGNORE_CASE = true;
+}    
+
+// Java compilation unit
+/*PARSER_BEGIN(ExampleScanner)     // ExampleScanner is the name of the generated scanner / parser
+public class ExampleScanner {
+  public static void main(String[] args) {
+    try {
+      ExampleScanner exScan = new ExampleScanner(System.in);
+      exScan.printTokenInfo(exScan);
+      exScan.Goal();
+    }
+    catch(ParseException e) {
+      // Will not happen during scanning (for parsing only).
+    }
+    catch(TokenMgrError e) {
+      System.out.println("Token manager error: " + e.getMessage());
+    }
+  }
+*/
+  /* Helper function for printing token info -- not needed for Stage 2.
+     The kind field of Token is an integer code that describes that kind of token. */
+/*  private static void printTokenInfo(ExampleScanner scan) {
+    for(Token t = scan.getNextToken(); t.kind != 0; t = scan.getNextToken()) {
+      String tokenClass = "";
+      switch(t.kind) {
+        case(1): tokenClass = "IF"; break;
+	case(4): tokenClass = "NUM"; break;
+	case(5): tokenClass = "ID"; break;
+	default: tokenClass = "??ERROR??";
+      }
+      System.out.print(tokenClass + " ");
+    }
+    System.out.println();
+  }
+}
+PARSER_END(ExampleScanner)*/
+
+// TOKEN specifies that matched string (right) be transformed into token (left)
+TOKEN: {
+  <IF: "if"> |            
+  <#LETTER: ["a"-"z"]> |      // #X means is used only in other definitions
+  <#DIGIT: ["0"-"9"]> |
+  <NUM: (<DIGIT>)+> |
+  <ID: <LETTER>(<LETTER>|<DIGIT>)*>
+}
+
+// SKIP specifies that matched string be thrown away
+SKIP: { " " | "\n" }
+
+void Goal():
+{}    // first set of braces for use in parser, leave empty for scanner
+{ (<IF> | <ID> | <NUM>)* }     // generated scanner recognizes any of three defined tokens
+
