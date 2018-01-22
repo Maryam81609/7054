@@ -1,0 +1,88 @@
+options {
+  STATIC = false;
+}    
+
+PARSER_BEGIN(Scanner)
+public class Scanner {
+  public static void main(String[] args) {
+   try{   
+      Scanner scan = new Scanner(System.in);
+      scan.printTokenInfo(scan);
+      scan.Goal();
+    }
+    catch(ParseException e){}
+    catch(TokenMgrError e) {
+      System.out.println("Token manager error: " + e.getMessage());
+    }
+  }
+
+  private static void printTokenInfo(Scanner scan) {
+    Token t;
+    for(t = scan.getNextToken(); t.kind != 0; t = scan.getNextToken()) {
+      System.out.print(t.kind+" ");
+    }
+    System.out.print(t.kind);
+    System.out.println();
+  }
+}
+PARSER_END(Scanner)
+
+
+TOKEN: {
+  <LBRACE:    "{"> |//1
+  <RBRACE:    "}"> |//2
+  <LBRACK:    "["> |//3
+  <RBRACK:    "]"> |//4
+  <LPAREN:    "("> |//5
+  <RPAREN:    ")"> |//6
+  <COMMA:     ","> |//7
+  <SEMI:      ";"> |//8
+  <DOT:       "."> |//9
+  <EXCLAM:    "!"> |//10
+  <ASSIGN:    "="> |//11
+  <AND:       "&&"> |//12
+  <PLUS:      "+"> |//13
+  <MINUS:     "-"> |//14
+  <TIMES:     "*"> |//15
+  <LT:        "<"> |//16
+  <IF:        "if"> |//17
+  <INT:       "int"> |//18 
+  <NEW:       "new"> |//19
+  <ELSE:      "else"> |//20
+  <MAIN:      "main"> |//21
+  <THIS:      "this"> |//22
+  <TRUE:      "true"> |//23
+  <VOID:      "void"> |//24
+  <CLASS:     "class"> |//25
+  <FALSE:     "false"> |//26
+  <WHILE:     "while"> |//27
+  <LENGTH:    "length"> |//28
+  <PUBLIC:    "public"> |//29
+  <RETURN:    "return"> |//30
+  <STAT:      "static"> |//31
+  <STRING:    "String"> |//32
+  <BOOLEAN:   "boolean"> |//33
+  <EXTENDS:   "extends"> |//34
+  <SYSOPRNTL: "System.out.println"> |//35 
+  <ID:        ["A"-"Z","a"-"z"](["A"-"Z","a"-"z"]|["0"-"9"]|"_")*> |//36
+  <NUM:       (["0"-"9"])+> |//37
+  <COMMENT:   "//"(<LBRACE> | <RBRACE> | <LBRACK> | <RBRACK> | <LPAREN> |
+    <RPAREN> | <COMMA> | <SEMI> | <DOT> | <EXCLAM> | <ASSIGN> | <AND> |
+    <PLUS> | <MINUS> | <TIMES> | <LT> | <IF> | <INT> | <NEW> | <ELSE> |
+    <MAIN> | <THIS> | <TRUE> | <VOID> | <CLASS> | <FALSE> | <WHILE> |
+    <LENGTH> | <PUBLIC> | <RETURN> | <STAT> | <STRING> | <BOOLEAN> |
+    <EXTENDS> | <SYSOPRNTL> | <ID> | <NUM>)*> //38
+}
+
+
+SKIP: { " " | "\n" | "\r\n" }
+
+void Goal():
+{} 
+
+{ (<LBRACE> | <RBRACE> | <LBRACK> | <RBRACK> | <LPAREN> | 
+   <RPAREN> | <COMMA> | <SEMI> | <DOT> | <EXCLAM> | <ASSIGN> | <AND> | 
+   <PLUS> | <MINUS> | <TIMES> | <LT> | <IF> | <INT> | <NEW> | <ELSE> | 
+   <MAIN> | <THIS> | <TRUE> | <VOID> | <CLASS> | <FALSE> | <WHILE> | 
+   <LENGTH> | <PUBLIC> | <RETURN> | <STAT> | <STRING> | <BOOLEAN> | 
+   <EXTENDS> | <SYSOPRNTL> | <ID> | <NUM>)* }
