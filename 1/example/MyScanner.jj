@@ -4,7 +4,7 @@ options {
 }    
 
 // Java compilation unit
-/*PARSER_BEGIN(ExampleScanner)     // ExampleScanner is the name of the generated scanner / parser
+PARSER_BEGIN(ExampleScanner)     // ExampleScanner is the name of the generated scanner / parser
 public class ExampleScanner {
   public static void main(String[] args) {
     try {
@@ -19,10 +19,10 @@ public class ExampleScanner {
       System.out.println("Token manager error: " + e.getMessage());
     }
   }
-*/
+
   /* Helper function for printing token info -- not needed for Stage 2.
      The kind field of Token is an integer code that describes that kind of token. */
-/*  private static void printTokenInfo(ExampleScanner scan) {
+  private static void printTokenInfo(ExampleScanner scan) {
     for(Token t = scan.getNextToken(); t.kind != 0; t = scan.getNextToken()) {
       String tokenClass = "";
       switch(t.kind) {
@@ -36,7 +36,7 @@ public class ExampleScanner {
     System.out.println();
   }
 }
-PARSER_END(ExampleScanner)*/
+PARSER_END(ExampleScanner)
 
 // TOKEN specifies that matched string (right) be transformed into token (left)
 TOKEN: {
