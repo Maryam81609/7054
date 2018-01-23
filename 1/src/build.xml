@@ -11,6 +11,6 @@
   </target>
   <target name="genscanner">
     <echo message="Generating java Files for the Scanner!" />
-    <javacc target="Scanner.jj"/>
+    <javacc javacchome="/usr/local/apps/javacc/javacc-4.0"  target="Scanner.jj"/>
   </target>
 </project>
