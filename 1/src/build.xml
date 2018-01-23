@@ -1,0 +1,5 @@
+<project name="A MiniJava Scanner" default="scan">
+  <target name="scan">
+    <java classname="Scanner" classpath="Scanner.java"/>
+  </target>
+</project>
