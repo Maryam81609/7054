@@ -65,17 +65,12 @@ TOKEN: {
   <EXTENDS:   "extends"> |//34
   <SYSOPRNTL: "System.out.println"> |//35 
   <ID:        ["A"-"Z","a"-"z"](["A"-"Z","a"-"z"]|["0"-"9"]|"_")*> |//36
-  <NUM:       (["0"-"9"])+> |//37
-  <COMMENT:   "//"(<LBRACE> | <RBRACE> | <LBRACK> | <RBRACK> | <LPAREN> |
-    <RPAREN> | <COMMA> | <SEMI> | <DOT> | <EXCLAM> | <ASSIGN> | <AND> |
-    <PLUS> | <MINUS> | <TIMES> | <LT> | <IF> | <INT> | <NEW> | <ELSE> |
-    <MAIN> | <THIS> | <TRUE> | <VOID> | <CLASS> | <FALSE> | <WHILE> |
-    <LENGTH> | <PUBLIC> | <RETURN> | <STAT> | <STRING> | <BOOLEAN> |
-    <EXTENDS> | <SYSOPRNTL> | <ID> | <NUM>)*> //38
+  <NUM:       (["0"-"9"])+> //37
 }
 
 
-SKIP: { " " | "\n" | "\r\n" }
+SKIP: { " " | "\t" | "\n" | "\r" | "\r\n" | 
+        <"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n")> }
 
 void Goal():
 {} 
