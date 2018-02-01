@@ -1,0 +1,152 @@
+// Grammar
+//	Exp		-> Exp "&&" LtLevel
+// 	Exp		-> LtLevel
+//	LtLevel		-> LtLevel "<" PlusLevel
+//	LtLevel		-> PlusLevel
+//	PlusLevel	-> PlusLevel ("+" | "-") MultLevel
+//	PlusLevel	-> MultLevel
+//	MultLevel	-> MultLevel "*" DotLevel
+//	MultLevel	-> DotLevel
+//	DotLevel	-> DotLevel ("[" | "]" | "." | "!" | "(" | ")") PrimaryExp
+//	DotLevel	-> PrimaryExp
+//	PrimaryExp	-> other
+
+// Expression  ->  Expression ( "&&" | "<" | "+" | "-" | "*" ) Expression
+//	| 	Expression "[" Expression "]"
+//	| 	Expression "." "length"
+//	| 	Expression "." Identifier "(" ( Expression ( "," Expression )* )? ")"
+//	| 	<INTEGER_LITERAL>
+//	| 	"true"
+//	| 	"false"
+//	| 	Identifier
+//	| 	"this"
+//	| 	"new" "int" "[" Expression "]"
+//	| 	"new" Identifier "(" ")"
+//	| 	"!" Expression
+//	| 	"(" Expression ")"
+
+options {
+  STATIC = false;
+}    
+
+PARSER_BEGIN(Parser)
+public class Parser {
+  public static void main(String[] args) {
+   try{   
+      Parser pars = new Parser(System.in);
+      pars.printTokenInfo(pars);
+      pars.Goal();
+    }
+    catch(ParseException e){}
+    catch(TokenMgrError e) {
+      System.err.println("TokenMgrError: " + e.getMessage());
+    }
+  }
+
+  private static void printTokenInfo(Parser pars) {
+    Token t;
+    for(t = pars.getNextToken(); t.kind != 0; t = pars.getNextToken()) {
+      System.out.print(t.kind+" ");
+    }
+    System.out.print(t.kind);
+    System.out.println();
+  }
+}
+PARSER_END(Parser)
+
+
+TOKEN: {
+  <LBRACE:    "{"> |//1
+  <RBRACE:    "}"> |//2
+  <LBRACK:    "["> |//3
+  <RBRACK:    "]"> |//4
+  <LPAREN:    "("> |//5
+  <RPAREN:    ")"> |//6
+  <COMMA:     ","> |//7
+  <SEMI:      ";"> |//8
+  <DOT:       "."> |//9
+  <EXCLAM:    "!"> |//10
+  <ASSIGN:    "="> |//11
+  <AND:       "&&"> |//12
+  <PLUS:      "+"> |//13
+  <MINUS:     "-"> |//14
+  <TIMES:     "*"> |//15
+  <LT:        "<"> |//16
+  <IF:        "if"> |//17
+  <INT:       "int"> |//18 
+  <NEW:       "new"> |//19
+  <ELSE:      "else"> |//20
+  <MAIN:      "main"> |//21
+  <THIS:      "this"> |//22
+  <TRUE:      "true"> |//23
+  <VOID:      "void"> |//24
+  <CLASS:     "class"> |//25
+  <FALSE:     "false"> |//26
+  <WHILE:     "while"> |//27
+  <LENGTH:    "length"> |//28
+  <PUBLIC:    "public"> |//29
+  <RETURN:    "return"> |//30
+  <STAT:      "static"> |//31
+  <STRING:    "String"> |//32
+  <BOOLEAN:   "boolean"> |//33
+  <EXTENDS:   "extends"> |//34
+  <SYSOPRNTL: "System.out.println"> |//35 
+  <ID:        ["A"-"Z","a"-"z"](["A"-"Z","a"-"z"]|["0"-"9"]|"_")*> |//36
+  <NUM:       (["0"-"9"])+> //37
+}
+
+
+SKIP: { " " | "\t" | "\n" | "\r" | "\r\n" | 
+        <"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n")> }
+
+void Goal():
+{} 
+{ MainClass() ( ClassDecl() )* <EOF> }
+
+//(<LBRACE> | <RBRACE> | <LBRACK> | <RBRACK> | <LPAREN> | 
+//   <RPAREN> | <COMMA> | <SEMI> | <DOT> | <EXCLAM> | <ASSIGN> | <AND> | 
+//   <PLUS> | <MINUS> | <TIMES> | <LT> | <IF> | <INT> | <NEW> | <ELSE> | 
+//   <MAIN> | <THIS> | <TRUE> | <VOID> | <CLASS> | <FALSE> | <WHILE> | 
+//   <LENGTH> | <PUBLIC> | <RETURN> | <STAT> | <STRING> | <BOOLEAN> | 
+//   <EXTENDS> | <SYSOPRNTL> | <ID> | <NUM>)* }
+
+void MainClass() :
+{}
+{ <CLASS> <ID> <LBRACE> 
+  <PUBLIC> <STAT> <VOID> <MAIN> 
+  <LPAREN> <STRING> <LBRACK> <RBRACK> <ID> <RPAREN> 
+  <LBRACE> Statement() <RBRACE> <RBRACE>}
+
+void ClassDecl() :
+{}
+{ <CLASS> <ID> [ <EXTENDS> <ID> ] <LBRACE> ( VarDecl() )* ( MethodDecl() )* <RBRACE> }
+
+void VarDecl() :
+{}
+{ Type() <ID> <SEMI> }
+
+void MethodDecl() :
+{}
+{ <PUBLIC> Type() <ID> 
+  <LPAREN> [ Type() <ID> ( <COMMA> Type() <ID> )* ] <RPAREN> 
+  <LBRACE> ( VarDecl() )* ( Statement() )* <RETURN> Exp() <SEMI> <RBRACE> }
+
+void Type() :
+{}
+{ <INT> <LBRACK> <RBRACK> | 
+  <BOOLEAN> |
+  <INT> |
+  <ID> }
+
+void Statement() :
+{}
+{ <LBRACE> ( Statement() )* <RBRACE> |
+  <IF> <LPAREN> Exp() <RPAREN> Statement() <ELSE> Statement() |
+  <WHILE> <LPAREN> Exp() <RPAREN> Statement() |
+  <SYSOPRNTL> <LPAREN> Exp() <RPAREN> <SEMI> |
+  <ID> <ASSIGN> Exp() <SEMI> |
+  <ID> <LBRACK> Exp() <RBRACK> <ASSIGN> Exp() <SEMI> }
+
+void Exp() :
+{}
+{}
