@@ -102,8 +102,9 @@ $ 	Goal \rightarrow "class" \; Id \; MainClass \; ( \; "class" \; Id \; RegClass
 	  \;\;\;\;\;\;\;		"if" \; "(" \; Exp \; ")" \; Stmt \; "else" \; Stmt \;|\;\\
 	\;\;\;\;\;\;\;			"while" \; "(" \; Exp \; ")" \; Stmt \;|\;\\
 			\;\;\;\;\;\;\;	"System.out.println" \; "(" \; Exp \; ")" \; ";" \;|\;\\
-			\;\;\;\;\;\;\;	Id \; "=" \; Exp \; ";" \;|\;\\
-	\;\;\;\;\;\;\;			Id \; "[" \; Exp \; "]" \; "=" \; Exp \; ";" \;|\;\\
+			\;\;\;\;\;\;\;	Id \; AssignStmt \\
+	AssignStmt	\rightarrow	"="  \; Exp \; ";" \;|\;\\
+											"[" \; Exp \; "]" \; "=" \; Exp \; ";" \\
 	--------------------------------------------\\
   Exp 	\rightarrow	LtLevel \; Exp' \\
   Exp'	\rightarrow	"\&\&" \; LtLevel \; Exp' \\
