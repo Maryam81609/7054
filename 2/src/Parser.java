@@ -315,8 +315,14 @@ public class Parser implements ParserConstants {
 
   final public void Exp() throws ParseException {
     LtLevel();
+    Expp();
+  }
+
+  final public void Expp() throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case AND:
+      jj_consume_token(AND);
+      LtLevel();
       Expp();
       break;
     default:
@@ -325,16 +331,16 @@ public class Parser implements ParserConstants {
     }
   }
 
-  final public void Expp() throws ParseException {
-    jj_consume_token(AND);
-    LtLevel();
-    Expp();
-  }
-
   final public void LtLevel() throws ParseException {
     PlusLevel();
+    LtLevelp();
+  }
+
+  final public void LtLevelp() throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case LT:
+      jj_consume_token(LT);
+      PlusLevel();
       LtLevelp();
       break;
     default:
@@ -343,58 +349,52 @@ public class Parser implements ParserConstants {
     }
   }
 
-  final public void LtLevelp() throws ParseException {
-    jj_consume_token(LT);
-    PlusLevel();
-    LtLevelp();
-  }
-
   final public void PlusLevel() throws ParseException {
     MultLevel();
-    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case PLUS:
-    case MINUS:
-      PlusLevelp();
-      break;
-    default:
-      jj_la1[16] = jj_gen;
-      ;
-    }
+    PlusLevelp();
   }
 
   final public void PlusLevelp() throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case PLUS:
-      jj_consume_token(PLUS);
-      break;
     case MINUS:
-      jj_consume_token(MINUS);
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case PLUS:
+        jj_consume_token(PLUS);
+        break;
+      case MINUS:
+        jj_consume_token(MINUS);
+        break;
+      default:
+        jj_la1[16] = jj_gen;
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+      MultLevel();
+      PlusLevelp();
       break;
     default:
       jj_la1[17] = jj_gen;
-      jj_consume_token(-1);
-      throw new ParseException();
+      ;
     }
-    MultLevel();
-    PlusLevelp();
   }
 
   final public void MultLevel() throws ParseException {
     DotLevel();
+    MultLevelp();
+  }
+
+  final public void MultLevelp() throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case TIMES:
+      jj_consume_token(TIMES);
+      DotLevel();
       MultLevelp();
       break;
     default:
       jj_la1[18] = jj_gen;
       ;
     }
-  }
-
-  final public void MultLevelp() throws ParseException {
-    jj_consume_token(TIMES);
-    DotLevel();
-    MultLevelp();
   }
 
   final public void DotLevel() throws ParseException {

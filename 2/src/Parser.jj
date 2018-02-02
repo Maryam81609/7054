@@ -166,35 +166,35 @@ void AssignStatement() :
 
 void Exp() :
 {}
-{ LtLevel() [ Expp() ] }
+{ LtLevel() Expp() }
 
 void Expp() :
 {}
-{ <AND> LtLevel() Expp() }
+{ [ <AND> LtLevel() Expp() ] }
 
 void LtLevel() :
 {}
-{ PlusLevel() [ LtLevelp() ] }
+{ PlusLevel() LtLevelp() }
 
 void LtLevelp() :
 {}
-{ <LT> PlusLevel() LtLevelp() }
+{ [ <LT> PlusLevel() LtLevelp() ] }
 
 void PlusLevel() :
 {}
-{ MultLevel() [ PlusLevelp() ] }
+{ MultLevel() PlusLevelp() }
 
 void PlusLevelp() :
 {}
-{ ( <PLUS> | <MINUS> ) MultLevel() PlusLevelp() }
+{ [ ( <PLUS> | <MINUS> ) MultLevel() PlusLevelp() ] }
 
 void MultLevel() :
 {}
-{ DotLevel() [ MultLevelp() ] }
+{ DotLevel() MultLevelp() }
 
 void MultLevelp() :
 {}
-{ <TIMES> DotLevel() MultLevelp() }
+{ [ <TIMES> DotLevel() MultLevelp() ] }
 
 void DotLevel() :
 {}
@@ -211,7 +211,7 @@ void PrimaryExp() :
   <NEW> NewExp() |
   <LPAREN> Exp() <RPAREN> |
   <ID> |
-  <NUM> }
+  <NUM>}
 
 void NewExp() :
 {}
