@@ -1,0 +1,58 @@
+\documentclass[12pt]{article}
+
+\newcommand{\code}[1]{\textsf{#1}}
+
+\title{Design Decisions and Evaluation of Scanner}
+\author{Maryam Dabaghchian-u1078006}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Design Decisions}
+For the scanner, I made the following design decisions:
+
+\begin{itemize}
+	\item[1.] Options:
+		\begin{itemize}
+			\item I use the option \code{IGNORE\_CASE = false} value, which is 
+			the default value, to distinguish between lower case letters and 
+			capital ones. For instance, the word \code{while} will be recognized 
+			as a keyword or token 27, whereas the word \code{While} will be 
+			recognized as an identifier or token 36 according to my 
+			implementation.
+			%
+			\item By default \code{SANITY\_CHECK = true}, which makes JavaCC 
+			perform different checks on the specification file, e.g., left 
+			recursion, ambiguity and etc. check. Detecting such errors can 
+			prevent the unexpected behavior in the generated scanner or parser.
+			%
+			\item I use the option \code{STATIC = false}, which allows instantiation of multiple scanners. This option is not useful or required in this level. The default value for this option is \code{true}.
+			%
+			\item That is was good to set the option \code{CACHE\_TOKENS = 
+			true}, as our target programs are not interactive. With this option 
+			the generated scanner or parser looks ahead for eaxtra tokens, that 
+			improves performance. However, looking a head for extra tokens does 
+			not work for interactive programs, as expected.
+		\end{itemize}
+		%	
+	\item[2.] Rule Priority:
+		\begin{itemize}
+			\item I have defined keyword tokens prior to identifier token, so 
+			that keywords such as \code{if}, \code{while}, and etc. will not 
+			be recognized as identifiers, but keyword tokens.
+%			%
+%			\item I guess the reason for ordering the tokens as represented in \code{token\_codes.txt} file, is based on how often a token is being used in a program. For intance, the tokens \code{\{ \}} could be used  
+		\end{itemize}
+		%
+	\item[3.] Since a line comment starts with \code{//} and after that any 
+	character can appear to the end of line, I specified any character with 
+	\code{($\sim["\backslash $n$","\backslash $r$"])$*}, which states a 
+	combination of anything except end of line character ending with an end of 
+	line character.
+	%
+	\item[4.] The \code{ant} builder automatically first generates the scanner, then compiles it, and finally scans the input file. It was better to separate the generating and compilation of the scanner as one target and scanning an input file as another target. 
+\end{itemize}
+
+
+\end{document}
