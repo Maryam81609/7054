@@ -82,6 +82,7 @@ $ 	Goal \rightarrow MainClass \; ( \; ClassDecl \; )^* \; <EOF> \\
   										"new" \; "int" \; "[" \; Exp \; "]" \; | \; 
   										"new" \; Id \; "(" \; ")" \; | \; 
   										<NUM> \; | \; 
+  										<ID> \;|\;
   										"(" \; Exp \; ")" $
 
 \subsection{Left Factoring}
@@ -129,6 +130,7 @@ $ 	Goal \rightarrow "class" \; Id \; MainClass \; ( \; "class" \; Id \; RegClass
   										"this" \; | \; 
   										"new" \; NewExp \; | \; 
   										<NUM> \; | \; 
+  										<ID> \;|\;
   										"(" \; Exp \; ")"  \\
   NewExp	\rightarrow	"int" \; "[" \; Exp \; "]" \; | \;
   									Id \; "(" \; ")"$
