@@ -99,10 +99,11 @@ $ 	Goal \rightarrow "class" \; Id \; MainClass \; ( \; "class" \; Id \; RegClass
 									Id  \\
 		--------------------------------------------\\
 	Stmt	\rightarrow	"\{" \; ( \; Stmt \; )^* \; "\}" \;|\;\\
-	  \;\;\;\;\;\;\;		"if" \; "(" \; Exp \; ")" \; Stmt \; "else" \; Stmt \;|\;\\
+	  \;\;\;\;\;\;\;		"if" \; "(" \; Exp \; ")" \; Stmt \; ElseStmt \;|\;\\
 	\;\;\;\;\;\;\;			"while" \; "(" \; Exp \; ")" \; Stmt \;|\;\\
 			\;\;\;\;\;\;\;	"System.out.println" \; "(" \; Exp \; ")" \; ";" \;|\;\\
 			\;\;\;\;\;\;\;	Id \; AssignStmt \\
+	ElseStmt \rightarrow (\; "else" \; Stmt \;)? \\
 	AssignStmt	\rightarrow	"="  \; Exp \; ";" \;|\;\\
 											"[" \; Exp \; "]" \; "=" \; Exp \; ";" \\
 	--------------------------------------------\\
