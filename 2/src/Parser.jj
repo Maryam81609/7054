@@ -34,13 +34,20 @@ public class Parser {
   public static void main(String[] args) {
    try{   
       Parser pars = new Parser(System.in);
-      pars.printTokenInfo(pars);
+     // pars.printTokenInfo(pars);
+      pars.printCode(pars);
       pars.Goal();
     }
-    catch(ParseException e){}
+    catch(ParseException e){
+      System.err.println("SyntaxError: " + e.getMessage());	
+    }
     catch(TokenMgrError e) {
       System.err.println("TokenMgrError: " + e.getMessage());
     }
+  }
+
+  private static void printCode(Parser pars) {
+    System.out.println("todo");	
   }
 
   private static void printTokenInfo(Parser pars) {
@@ -101,7 +108,7 @@ SKIP: { " " | "\t" | "\n" | "\r" | "\r\n" |
 
 void Goal():
 {} 
-{ MainClass() ( ClassDecl() )* <EOF> }
+{ <CLASS> <ID> MainClass() ( <CLASS> <ID> RegClass() )* <EOF> }
 
 //(<LBRACE> | <RBRACE> | <LBRACK> | <RBRACK> | <LPAREN> | 
 //   <RPAREN> | <COMMA> | <SEMI> | <DOT> | <EXCLAM> | <ASSIGN> | <AND> | 
@@ -112,14 +119,13 @@ void Goal():
 
 void MainClass() :
 {}
-{ <CLASS> <ID> <LBRACE> 
-  <PUBLIC> <STAT> <VOID> <MAIN> 
+{ <LBRACE> <PUBLIC> <STAT> <VOID> <MAIN> 
   <LPAREN> <STRING> <LBRACK> <RBRACK> <ID> <RPAREN> 
-  <LBRACE> Statement() <RBRACE> <RBRACE>}
+  <LBRACE> [ Statement() ] <RBRACE> <RBRACE>}
 
-void ClassDecl() :
+void RegClass() :
 {}
-{ <CLASS> <ID> [ <EXTENDS> <ID> ] <LBRACE> ( VarDecl() )* ( MethodDecl() )* <RBRACE> }
+{ [ <EXTENDS> <ID> ] <LBRACE> ( VarDecl() )* ( MethodDecl() )* <RBRACE> }
 
 void VarDecl() :
 {}
@@ -129,24 +135,86 @@ void MethodDecl() :
 {}
 { <PUBLIC> Type() <ID> 
   <LPAREN> [ Type() <ID> ( <COMMA> Type() <ID> )* ] <RPAREN> 
-  <LBRACE> ( VarDecl() )* ( Statement() )* <RETURN> Exp() <SEMI> <RBRACE> }
+  <LBRACE> ( LOOKAHEAD(2) VarDecl() )* ( Statement() )* <RETURN> Exp() <SEMI> <RBRACE> }
 
 void Type() :
 {}
-{ <INT> <LBRACK> <RBRACK> | 
+{ <INT> [ IntTypePostfix() ] | 
   <BOOLEAN> |
-  <INT> |
   <ID> }
+
+void IntTypePostfix() :
+{}
+{ <LBRACK> <RBRACK> }
 
 void Statement() :
 {}
 { <LBRACE> ( Statement() )* <RBRACE> |
-  <IF> <LPAREN> Exp() <RPAREN> Statement() <ELSE> Statement() |
+  <IF> <LPAREN> Exp() <RPAREN> Statement() [ LOOKAHEAD(1) ElseStatement() ] |
   <WHILE> <LPAREN> Exp() <RPAREN> Statement() |
   <SYSOPRNTL> <LPAREN> Exp() <RPAREN> <SEMI> |
-  <ID> <ASSIGN> Exp() <SEMI> |
-  <ID> <LBRACK> Exp() <RBRACK> <ASSIGN> Exp() <SEMI> }
+  <ID> AssignStatement() }
+
+void ElseStatement() :
+{}
+{ <ELSE> Statement() }
+
+void AssignStatement() :
+{}
+{ <ASSIGN> Exp() <SEMI> |
+  <LBRACK> Exp() <RBRACK> <ASSIGN> Exp() <SEMI> }
 
 void Exp() :
 {}
+{ LtLevel() [ Expp() ] }
+
+void Expp() :
 {}
+{ <AND> LtLevel() Expp() }
+
+void LtLevel() :
+{}
+{ PlusLevel() [ LtLevelp() ] }
+
+void LtLevelp() :
+{}
+{ <LT> PlusLevel() LtLevelp() }
+
+void PlusLevel() :
+{}
+{ MultLevel() [ PlusLevelp() ] }
+
+void PlusLevelp() :
+{}
+{ ( <PLUS> | <MINUS> ) MultLevel() PlusLevelp() }
+
+void MultLevel() :
+{}
+{ DotLevel() [ MultLevelp() ] }
+
+void MultLevelp() :
+{}
+{ <TIMES> DotLevel() MultLevelp() }
+
+void DotLevel() :
+{}
+{ <EXCLAM> DotLevel() | 
+  PrimaryExp() ( <LBRACK> Exp() <RBRACK> |
+		LOOKAHEAD(2) <DOT> <LENGTH> |
+		LOOKAHEAD(2) <DOT> <ID> <LPAREN> [ Exp() ( <COMMA> Exp() )* ] <RPAREN> )* }
+
+void PrimaryExp() :
+{}
+{ <TRUE> |
+  <FALSE> |
+  <THIS> |
+  <NEW> NewExp() |
+  <LPAREN> Exp() <RPAREN> |
+  <ID> |
+  <NUM> }
+
+void NewExp() :
+{}
+{ <INT> <LBRACK> Exp() <RBRACK> |
+  <ID> <LPAREN> <RPAREN> }
+
