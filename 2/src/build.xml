@@ -1,16 +1,16 @@
-<project name="A MiniJava Scanne" default="scan">
-  <target name="scan" depends="compile">
-    <echo message="Scaning!" />
-    <java classname="Scanner" >
+<project name="A MiniJava Parser" default="pars">
+  <target name="pars" depends="compile">
+    <echo message="Parsing!" />
+    <java classname="Parser" >
       <classpath path="." />
     </java>
   </target>
-  <target name="compile" depends="genscanner">
+  <target name="compile" depends="genparser">
     <echo message="Compiling Generated java Files!" />
     <javac includeantruntime="false"  srcdir="."/>
   </target>
-  <target name="genscanner">
-    <echo message="Generating java Files for the Scanner!" />
+  <target name="genparser">
+    <echo message="Generating java Files for the Parser!" />
     <javacc javacchome="/usr/local/apps/javacc/javacc-4.0"  target="Parser.jj"/>
   </target>
 </project>
