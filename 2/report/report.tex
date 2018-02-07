@@ -11,20 +11,12 @@
 
 \begin{document}
 \maketitle
-%Exp "[" Exp "]"
-%//	| 	Exp "." "length"
-%//	| 	Exp "." Identifier "(" ( Exp ( "," Exp )* )? ")"
-%//	| 	<INTEGER_LITERAL>
-%//	| 	"true"
-%//	| 	"false"
-%//	| 	Identifier
-%//	| 	"this"
-%//	| 	"new" "int" "[" Exp "]"
-%//	| 	"new" Identifier "(" ")"
-%//	| 	"!" Exp
-%//	| 	"(" Exp ")"
 
-\section{Grammar}
+\section{Operations' Priority and Left Association}
+\label{sec:prior}
+Operations' priority and left association is related to \code{Exp} production rules in 
+the grammar. So, I change them as follows to follow the correct priority and left 
+association.\\
 $Exp 	\rightarrow	LtLevel \\
   Exp	 	\rightarrow	Exp \; "\&\&" \; LtLevel \\
   LtLevel	\rightarrow  PlusLevel \\
@@ -40,7 +32,9 @@ $Exp 	\rightarrow	LtLevel \\
   DotLevel \rightarrow	"!" \; DotLevel \\
   PrimaryExp \rightarrow "true" \; | \; "false" \; | \; "this" \; | \; "new" \; "int" \; "[" \; Exp \; "]" \; | \; "new" \; Id \; "(" \; ")" \; | \; <NUM> \; | \; "(" \; Exp \; ")" $
 
-\subsection{Eliminate Left Recursion}
+\section{Eliminate Left Recursion}
+Then, in the next step I eliminate the left recursion that exists in production rules 
+defined in Section~\ref{sec:prior}. Other production rules do not have left recursion.\\
 $ 	Goal \rightarrow MainClass \; ( \; ClassDecl \; )^* \; <EOF> \\
 	MainClass	\rightarrow	"class" \; Id \; "\{" \; "public" \; "static" \; "void" \; "main" \; "(" \; "String" \; "[" \; "]" \; Id \; ")" \; "\{" \; Stmt \; "\}" \; "\}" \\
 	ClassDecl \rightarrow		"class" \; Id \; ( \; "extends" \; Id \; )? \; "\{" \; ( \; VarDecl \; )^* \; ( \; MethodDecl \; )^* \; "\}" \\
@@ -85,7 +79,10 @@ $ 	Goal \rightarrow MainClass \; ( \; ClassDecl \; )^* \; <EOF> \\
   										<ID> \;|\;
   										"(" \; Exp \; ")" $
 
-\subsection{Left Factoring}
+\section{Left Factoring}
+After eliminating the left recursion, I do the left factoring, which enables the parser 
+to decide which production rule should be used next by looking at the next 
+token.\\
 $ 	Goal \rightarrow "class" \; Id \; MainClass \; ( \; "class" \; Id \; RegClass \; )^* \; <EOF> \\
 %
 %
@@ -134,9 +131,5 @@ $ 	Goal \rightarrow "class" \; Id \; MainClass \; ( \; "class" \; Id \; RegClass
   										"(" \; Exp \; ")"  \\
   NewExp	\rightarrow	"int" \; "[" \; Exp \; "]" \; | \;
   									Id \; "(" \; ")"$
-
-\section{Design Decisions}
-
-
 
 \end{document}
