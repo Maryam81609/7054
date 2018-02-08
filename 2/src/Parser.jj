@@ -108,7 +108,7 @@ SKIP: { " " | "\t" | "\n" | "\r" | "\r\n" |
 
 void Goal():
 {} 
-{ <CLASS> <ID> MainClass() ( <CLASS> <ID> RegClass() )* <EOF> }
+{ MainClass() ( ClassDecl() )* <EOF> }
 
 //(<LBRACE> | <RBRACE> | <LBRACK> | <RBRACK> | <LPAREN> | 
 //   <RPAREN> | <COMMA> | <SEMI> | <DOT> | <EXCLAM> | <ASSIGN> | <AND> | 
@@ -119,13 +119,13 @@ void Goal():
 
 void MainClass() :
 {}
-{ <LBRACE> <PUBLIC> <STAT> <VOID> <MAIN> 
+{ <CLASS> <ID> <LBRACE> <PUBLIC> <STAT> <VOID> <MAIN> 
   <LPAREN> <STRING> <LBRACK> <RBRACK> <ID> <RPAREN> 
   <LBRACE> [ Statement() ] <RBRACE> <RBRACE>}
 
-void RegClass() :
+void ClassDecl() :
 {}
-{ [ <EXTENDS> <ID> ] <LBRACE> ( VarDecl() )* ( MethodDecl() )* <RBRACE> }
+{ <CLASS> <ID> [ <EXTENDS> <ID> ] <LBRACE> ( VarDecl() )* ( MethodDecl() )* <RBRACE> }
 
 void VarDecl() :
 {}
