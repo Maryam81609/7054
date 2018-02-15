@@ -1,0 +1,271 @@
+/* miniJava parser */
+options {
+  STATIC = false;
+}    
+
+PARSER_BEGIN(NewParser)
+
+package parser;
+import syntaxtree.*;
+import visitor.*;
+import java.util.Vector;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+
+public class NewParser {
+  public static void main(String[] args) throws FileNotFoundException {
+   try{
+	File f = new File(args[0]);
+        String fName = f.getName();
+	InputStream in = new FileInputStream(f);
+	Program root = new NewParser(in).Goal();
+	//root.accept(new PrettyPrintVisitor());   
+	//root.accept(new AST_PrintVisitor());
+	String currDir = System.getProperty("user.dir");
+        String astFileName = currDir + "/ast/" + fName + ".graphviz";
+	(new DotVisitor()).writeDotFile(astFileName, root);
+    }
+    catch(ParseException e){
+      System.err.println("SyntaxError: " + e.getMessage());	
+    }
+    catch(TokenMgrError e) {
+      System.err.println("TokenMgrError: " + e.getMessage());
+    }
+  }
+
+  private static void printCode(NewParser pars) {
+    System.out.println("todo");	
+  }
+
+  private static void printTokenInfo(NewParser pars) {
+    Token t;
+    for(t = pars.getNextToken(); t.kind != 0; t = pars.getNextToken()) {
+      System.out.print(t.kind+" ");
+    }
+    System.out.print(t.kind);
+    System.out.println();
+  }
+}
+PARSER_END(NewParser)
+
+
+TOKEN: {
+  <LBRACE:    "{"> |//1
+  <RBRACE:    "}"> |//2
+  <LBRACK:    "["> |//3
+  <RBRACK:    "]"> |//4
+  <LPAREN:    "("> |//5
+  <RPAREN:    ")"> |//6
+  <COMMA:     ","> |//7
+  <SEMI:      ";"> |//8
+  <DOT:       "."> |//9
+  <EXCLAM:    "!"> |//10
+  <ASSIGN:    "="> |//11
+  <AND:       "&&"> |//12
+  <PLUS:      "+"> |//13
+  <MINUS:     "-"> |//14
+  <TIMES:     "*"> |//15
+  <LT:        "<"> |//16
+  <IF:        "if"> |//17
+  <INT:       "int"> |//18 
+  <NEW:       "new"> |//19
+  <ELSE:      "else"> |//20
+  <MAIN:      "main"> |//21
+  <THIS:      "this"> |//22
+  <TRUE:      "true"> |//23
+  <VOID:      "void"> |//24
+  <CLASS:     "class"> |//25
+  <FALSE:     "false"> |//26
+  <WHILE:     "while"> |//27
+  <LENGTH:    "length"> |//28
+  <PUBLIC:    "public"> |//29
+  <RETURN:    "return"> |//30
+  <STAT:      "static"> |//31
+  <STRING:    "String"> |//32
+  <BOOLEAN:   "boolean"> |//33
+  <EXTENDS:   "extends"> |//34
+  <SYSOPRNTL: "System.out.println"> |//35 
+  <ID:        ["A"-"Z","a"-"z"](["A"-"Z","a"-"z"]|["0"-"9"]|"_")*> |//36
+  <NUM:       (["0"-"9"])+> //37
+}
+
+
+SKIP: { " " | "\t" | "\n" | "\r" | "\r\n" | 
+        <"//" (~["\n","\r"])* ("\n" | "\r" | "\r\n")> }
+
+Program Goal():
+{ MainClass mc;
+  ClassDeclList cdlist; } 
+{ mc = MainClass() cdlist = ClassDeclList() <EOF> { return new Program(mc, cdlist); } }
+
+MainClass MainClass() :
+{ Token t1, t2;
+  Statement s1;}
+{ <CLASS> t1 = <ID> <LBRACE> <PUBLIC> <STAT> <VOID> <MAIN> 
+  <LPAREN> <STRING> <LBRACK> <RBRACK> t2 = <ID> <RPAREN> 
+  <LBRACE> s1 = Statement() <RBRACE> <RBRACE> { return new MainClass(new Identifier(t1.image), new Identifier(t2.image), s1); } }
+
+ClassDeclList ClassDeclList() :
+{ ClassDeclList cdlist;
+  ClassDecl cd; }
+{ {cdlist = new ClassDeclList(); } ( cd = ClassDecl() { cdlist.addElement(cd); } )* { return cdlist; } }
+
+ClassDecl ClassDecl() :
+{ Token t1, t2, t3;
+  VarDeclList vdlist1, vdlist2;
+  MethodDeclList mdlist1, mdlist2;
+   }
+{ LOOKAHEAD(3) <CLASS> t1 = <ID> <LBRACE> vdlist1 = VarDeclList() mdlist1 = MethodDeclList() <RBRACE> 
+     { return new ClassDeclSimple(new Identifier(t1.image), vdlist1, mdlist1); } | 
+  LOOKAHEAD(3) <CLASS> t2 = <ID> <EXTENDS> t3 = <ID> <LBRACE> vdlist2 = VarDeclList() mdlist2 = MethodDeclList() <RBRACE>
+     { return new ClassDeclExtends(new Identifier(t2.image), new Identifier(t3.image), vdlist2, mdlist2); } }
+
+MethodDeclList MethodDeclList() :
+{ MethodDeclList mdlist;
+  MethodDecl md; }
+{ { mdlist = new MethodDeclList(); } ( md =  MethodDecl() { mdlist.addElement(md); } )* { return mdlist; }  }
+
+MethodDecl MethodDecl() :
+{ Type ty1, ty2;
+  Token t1, t2, t3;
+  Exp e1;
+  FormalList frmlist;
+  VarDeclList vdlist;
+  StatementList stmtlist; }
+{ <PUBLIC> ty1 = Type() t1 = <ID> 
+  <LPAREN> frmlist = FrmlList() <RPAREN> 
+  <LBRACE> vdlist = VarDeclList() stmtlist = StmtList() <RETURN> e1 = Exp() <SEMI> <RBRACE> 
+  { return new MethodDecl(ty1, new Identifier(t1.image), frmlist, vdlist, stmtlist, e1); } }
+
+Formal Formal() :
+{ Type ty1;
+  Token t1; }
+{ ty1 = Type() t1 = <ID> { return new Formal(ty1, new Identifier(t1.image)); } }
+
+FormalList FrmlList() :
+{ FormalList frmllist;
+  Formal frm1, frm2;}
+{ { frmllist = new FormalList(); } frm1 = Formal() { frmllist.addElement(frm1); } ( <COMMA> frm2 = Formal() { frmllist.addElement(frm2); } )* { return frmllist; } |
+  { return new FormalList(); } }
+
+VarDeclList VarDeclList() :
+{ VarDeclList vdlist;
+  VarDecl vd; }
+{ { vdlist = new VarDeclList(); } ( LOOKAHEAD(2) vd = VarDecl() { vdlist.addElement(vd); } )* { return vdlist; }  } 
+
+VarDecl VarDecl() :
+{ Type ty;
+  Token t; }
+{ ty = Type() t = <ID> <SEMI> { return new VarDecl(ty, new Identifier(t.image)); } }
+
+Type Type() :
+{ Token t1; }
+{ LOOKAHEAD(2) <INT> <LBRACK> <RBRACK> { return new IntArrayType(); } |
+  <INT> { return new IntegerType(); } | 
+  <BOOLEAN> { return new BooleanType(); } |
+  t1 = <ID> { return new IdentifierType(t1.image); } }
+
+Statement Statement() :
+{ StatementList list;
+  Exp e1, e2, e3, e4, e5, e6;
+  Statement s1, s2, s3;
+  Token t1, t2;}
+{ <LBRACE> list = StmtList() <RBRACE> { return new Block(list); } |
+  <IF> <LPAREN> e1 = Exp() <RPAREN> 
+     s1 = Statement() 
+     <ELSE> s2 = Statement()
+     { return new If(e1, s1, s2); } |
+  <WHILE> <LPAREN> e2 = Exp() <RPAREN> s3 = Statement() { return new While(e2, s3); } |
+  <SYSOPRNTL> <LPAREN> e3 = Exp() <RPAREN> <SEMI> { return new Print(e3); } |
+  LOOKAHEAD(2) t1 = <ID> <ASSIGN> e4 = Exp() <SEMI> 
+     { return new Assign(new Identifier(t1.image), e4); } |
+  LOOKAHEAD(2) t2 = <ID> <LBRACK> e5 = Exp() <RBRACK> <ASSIGN> e6 = Exp() <SEMI> 
+     { return new ArrayAssign(new Identifier(t2.image), e5, e6); } }
+
+StatementList StmtList() : 
+{ StatementList stmtlist;
+  Statement s1; }
+{ { stmtlist = new StatementList(); } 
+  ( s1 = Statement() 
+    { stmtlist.addElement(s1); } )* { return stmtlist; } }
+
+Exp Exp() :
+{ Exp e1, e2; }
+{ e1 = LtLevel() e2 = Expp(e1) { return e2; } }
+
+Exp Expp(Exp ae) :
+{ Exp e1, e2, e3; }
+{ <AND> e1 = LtLevel() { e2 = new And(ae, e1); } e3 = Expp(e2) { return e3; } |
+  { return ae; } }
+
+Exp LtLevel() :
+{ Exp e1, e2; }
+{ e1 = PlusLevel() e2 = LtLevelp(e1) { return e2; } }
+
+Exp LtLevelp(Exp ae) :
+{ Exp e1; }
+{ <LT> e1 = PlusLevel() { return new LessThan(ae, e1); } |
+  { return ae; } }
+
+Exp PlusLevel() :
+{ Exp e1, e2; }
+{ e1 = MultLevel() e2 = PlusLevelp(e1) { return e2; } }
+
+Exp PlusLevelp(Exp ae) :
+{ Exp e1, e2, e3, e4, e5, e6; }
+{   <PLUS> e1 = MultLevel() { e2 = new Plus(ae, e1); } e3 = PlusLevelp(e2) { return e3; } |
+    <MINUS> e4 = MultLevel() { e5 = new Minus(ae, e4); } e6 = PlusLevelp(e5) { return e6; } |
+    { return ae; } }
+
+Exp MultLevel() :
+{ Exp e1, e2;}
+{ e1 = DotLevel() e2 = MultLevelp(e1) { return e2; } }
+
+Exp MultLevelp(Exp ae) :
+{ Exp e1, e2, e3;}
+{ <TIMES> e1 = DotLevel() { e2 = new Times(ae, e1); } e3 = MultLevelp(e2) { return e3; } |
+  { return ae; } }
+
+Exp DotLevel() : 
+{Exp e1, e2, e3, e4;}
+{ <EXCLAM> e1 = LastLevelPrimiry() e2 = DotLevelp(e1) { return new Not(e2); } |
+  e3 = LastLevelPrimiry() e4 = DotLevelp(e3) { return e4; } }
+ 
+Exp DotLevelp(Exp ae) : 
+{ Exp e1, e2; }
+{  e1 = LastLevel(ae) e2 = DotLevelp(e1) { return e2; } | {return ae;} }
+
+Exp LastLevel(Exp ae) : 
+{ Exp e, i;
+  ExpList el;
+  Token t5;}
+{ LOOKAHEAD(2) <DOT> <LENGTH> { return new ArrayLength(ae); } |
+  <DOT> t5 = <ID> <LPAREN> el = ExpList() <RPAREN> 
+	{ return new Call(ae, new Identifier(t5.image), el); } |
+  <LBRACK> i = Exp() <RBRACK> { return new ArrayLookup(ae, i); } }
+
+Exp LastLevelPrimiry() :
+{ Exp e, i;
+  Token t1, t2, t3, t4, t6, t7;}
+{ <TRUE> { return new True(); } |
+  <FALSE> { return new False(); } |
+  <THIS> { return new This(); } |
+  LOOKAHEAD(2) <NEW> t4 = <ID> <LPAREN> <RPAREN> 
+ 	{return new NewObject(new Identifier(t4.image)); } |
+  <LPAREN> e = Exp() <RPAREN> { return e; } |  
+  LOOKAHEAD(2) <NEW> <INT> <LBRACK> i = Exp() <RBRACK> 
+	{ return new NewArray(i);} | 
+  LOOKAHEAD(2) t6 = <ID> { return new IdentifierExp(t6.image); } |
+  t7 = <NUM> { return new IntegerLiteral(Integer.parseInt(t7.image)); } }
+
+ExpList ExpList() :
+{ ExpList list;
+  Exp e1, e2;}
+{ {list = new ExpList();} 
+   e1 = Exp() 
+    {list.addElement(e1);} 
+    ( <COMMA> e2 = Exp() {list.addElement(e2);} )* 
+    { return list; } |
+    { return new ExpList(); } }
