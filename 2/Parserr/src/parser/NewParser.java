@@ -7,19 +7,27 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class NewParser implements NewParserConstants {
   public static void main(String[] args) throws FileNotFoundException {
-   try{
-        File f = new File(args[0]);
+        try{
+                File f = new File(args[0]);
         String fName = f.getName();
-        InputStream in = new FileInputStream(f);
-        Program root = new NewParser(in).Goal();
-        //root.accept(new PrettyPrintVisitor());   
-        //root.accept(new AST_PrintVisitor());
-        String currDir = System.getProperty("user.dir");
-        String astFileName = currDir + "/ast/" + fName + ".graphviz";
-        (new DotVisitor()).writeDotFile(astFileName, root);
+                InputStream in = new FileInputStream(f);
+                Program root = new NewParser(in).Goal();
+                root.accept(new PrettyPrintVisitor());   
+                //root.accept(new AST_PrintVisitor());
+                String currDir = System.getProperty("user.dir");
+                String astDir = currDir + "/ast/";
+        Path path = Paths.get(astDir);
+        if(Files.notExists(path))
+                new File(astDir).mkdir();
+        String astFileName = astDir + fName + ".graphviz";
+                (new DotVisitor()).writeDotFile(astFileName, root);
+
     }
     catch(ParseException e){
       System.err.println("SyntaxError: " + e.getMessage());
@@ -711,12 +719,6 @@ public class NewParser implements NewParserConstants {
     finally { jj_save(9, xla); }
   }
 
-  private boolean jj_3_7() {
-    if (jj_scan_token(DOT)) return true;
-    if (jj_scan_token(LENGTH)) return true;
-    return false;
-  }
-
   private boolean jj_3R_11() {
     if (jj_scan_token(ID)) return true;
     return false;
@@ -805,6 +807,12 @@ public class NewParser implements NewParserConstants {
   private boolean jj_3_5() {
     if (jj_scan_token(ID)) return true;
     if (jj_scan_token(ASSIGN)) return true;
+    return false;
+  }
+
+  private boolean jj_3_7() {
+    if (jj_scan_token(DOT)) return true;
+    if (jj_scan_token(LENGTH)) return true;
     return false;
   }
 

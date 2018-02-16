@@ -1,0 +1,11 @@
+To parse and generate an AST, after compiling run the following commands:
+
+# compile 
+- cd Parserr/src
+- javac ./visitor/*.java -d ../bin/
+- javac ./syntaxtree/*.java -d ../bin/
+- javac ./parser/*.java -d ../bin/
+
+# run
+- cd ../bin
+- java parser/NewParser  INPUT_FILE
