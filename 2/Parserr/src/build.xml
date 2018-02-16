@@ -1,0 +1,18 @@
+<project name="A MiniJava Parser" default="pars">
+  <target name="parseandast">
+    <echo message="parsing the input file and generating AST..." />
+    <java classname="NewParser">
+      <classpath path="parser/" />
+    </java>
+  </target>
+  <target name="compile" depends="genparser">
+    <echo message="Compiling..." />
+    <javac includeantruntime="false"  srcdir="./visitor/*.java"/>
+    <javac includeantruntime="false"  srcdir="./syntaxtree/*.java"/>
+    <javac includeantruntime="false"  srcdir="./parser/*.java"/>
+  </target>
+  <target name="genparser">
+    <echo message="Generating java Files for the Parser!" />
+    <javacc javacchome="/usr/local/apps/javacc/javacc-4.0" target="parser/NewParser.jj" outputdirectory="parser/" />
+  </target>
+</project>
