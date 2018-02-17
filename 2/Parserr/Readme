@@ -1,11 +1,36 @@
-To parse and generate an AST, after compiling run the following commands:
+To parse and generate an AST using ANT run the following commands:
+
+- cd src/
+
+# Generate parser java files
+- ant genparser
+
+
+# Compile all files (visitor, syntaxtree, parser)
+- ant compileall
+
+
+# Run parser for a given input file
+- ant parseandast -Dargs=INPUT_FILE
+
+# eg: ant parseandast -Darg='../../parser_tests/gcd.java'
+
+==========================================================
+
+
+
+To parse and generate an AST run the following commands:
+
+# Generate parser java files
+- cd src/parser/
+- javacc NewParser.jj
 
 # compile 
-- cd Parserr/src
+- cd src/
 - javac ./visitor/*.java -d ../bin/
 - javac ./syntaxtree/*.java -d ../bin/
 - javac ./parser/*.java -d ../bin/
 
 # run
-- cd ../bin
+- cd bin/
 - java parser/NewParser  INPUT_FILE
