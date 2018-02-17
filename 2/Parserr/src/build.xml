@@ -1,15 +1,17 @@
 <project name="A MiniJava Parser" default="pars">
   <target name="parseandast">
     <echo message="parsing the input file and generating AST..." />
-    <java classname="NewParser">
-      <classpath path="parser/" />
+    <echo message="${basedir}" />
+    <java fork="true" dir="../bin" classname="parser/NewParser">
+      <classpath path="../bin" />
+      <arg line="${args}"/>
     </java>
+    <echo message="${basedir}" />
   </target>
-  <target name="compile" depends="genparser">
+  <target name="compileall">
     <echo message="Compiling..." />
-    <javac includeantruntime="false"  srcdir="./visitor/*.java"/>
-    <javac includeantruntime="false"  srcdir="./syntaxtree/*.java"/>
-    <javac includeantruntime="false"  srcdir="./parser/*.java"/>
+    <mkdir dir="../bin" />
+    <javac includeantruntime="false"  srcdir="." destdir="../bin/" />
   </target>
   <target name="genparser">
     <echo message="Generating java Files for the Parser!" />
