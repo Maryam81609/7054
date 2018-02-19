@@ -7,7 +7,11 @@ To type-check the input file do the following:
 
 
 # Run checker for a given input file
-- ant run -Dargs=INPUT_FILE
+- ant run -Dargs=PATH_RELATIVE_TO_BIN/INPUT_FILE
 
-# eg: ant parseandast -Darg='PATH_TO_FILES/arrays2.java'
+# Example
+- assume Checker and checker_tests are in the same directory
+- current working directory is Checker
+- run the command
+    * ant run -Dargs="../../checker_tests/arrays2.java"
 
