@@ -1,0 +1,14 @@
+<project name="A MiniJava Parser" default="build">
+  <target name="run">
+    <echo message="Type checking ..." />
+    <java fork="true" dir="bin/" classname="parser/NewParser">
+       <classpath path="bin/" />
+       <arg line="${args}" />
+    </java>
+  </target>
+  <target name="build">
+    <echo message="Building..." />
+    <mkdir dir="bin" />
+    <javac includeantruntime="false"  srcdir="src/" destdir="bin/" />
+  </target>
+</project>
