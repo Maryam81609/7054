@@ -2,6 +2,7 @@
 package parser;
 import syntaxtree.*;
 import visitor.*;
+import symbol.*;
 import java.util.Vector;
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,20 +15,24 @@ import java.nio.file.Paths;
 public class NewParser implements NewParserConstants {
   public static void main(String[] args) throws FileNotFoundException {
         try{
-                File f = new File("/home/maryam/7054/3/checker_tests/symtest.java");//new File(args[0]);
+        		//System.out.println(args[0]);
+                File f = new File(args[0]); //new File("/home/maryam/7054/3/checker_tests/symtest.java");//
                 String fName = f.getName();
                 InputStream in = new FileInputStream(f);
                 Program root = new NewParser(in).Goal();
                 /*root.accept(new PrettyPrintVisitor());   
-                //root.accept(new AST_PrintVisitor());
-                String currDir = System.getProperty("user.dir");
+                //root.accept(new AST_PrintVisitor());*/
+                /*String currDir = System.getProperty("user.dir");
                 String astDir = currDir + "/ast/";
                 Path path = Paths.get(astDir);
                 if(Files.notExists(path))
                 new File(astDir).mkdir();
                 String astFileName = astDir + fName + ".graphviz";
                 (new DotVisitor()).writeDotFile(astFileName, root);*/
-                root.accept(new SymbolTableVisitor());
+                SymbolTableVisitor symTblVisitor = new SymbolTableVisitor();
+                root.accept(symTblVisitor);
+                SymbolTable symTable = symTblVisitor.getTable();
+                root.accept(new TypeCheckVisitor(symTable));
     }
     catch(ParseException e){
       System.err.println("SyntaxError: " + e.getMessage());

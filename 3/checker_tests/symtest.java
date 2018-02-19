@@ -1,16 +1,17 @@
 class MainClass {
     public static void main(String[] a) {
 	System.out.println(new Array().createArray(10)[3] + new Array().createArray(100).length);
+	//System.out.println(new Array().createArray(10));
     }
 }
 
 class Array {
     int[] array;
-    //int array;
+    //int array; //multiple vars in a class
 
-    public int[] createArray(int n) { 
+    public int[] createArray(int n){//, int[] n) { //multiple param
 	int i;
-	//boolean n;
+	//boolean i; //multiple loca vars
 	i = 0;
 	array = new int[n]; 
 	while (i<array.length) {
@@ -28,16 +29,33 @@ class Array {
 	int n;
 	int[] array;
 	int[] newarray;
+	//int c;
+	//foo f;
+	//f = new foo();
+	//c = f.color(array);
+	//n = array.color();
 	array = this.createArray(14);
 	newarray = new int[this.size()];
 	while (n<this.size()) {
+	 //   n[4] = array[n];
 	    newarray[n] = array[n];
 	    n=n+1;
 	}
+	//if(true){
+	//	n=n-3;
+	//}
+	//else{
+	//	n=n+1;
+	//}
 	return newarray;
     }
 }
 
-//class Array{ }
+//class Array{ } //multiple class
 
-    
+class foo extends Arrayy {
+
+	public int color(int n){
+		return n;
+	}
+}    

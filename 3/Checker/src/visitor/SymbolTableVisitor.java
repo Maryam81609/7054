@@ -10,12 +10,16 @@ public class SymbolTableVisitor implements Visitor {
 	private ClassTable currClass;
 	private MethodTable currMethod;
 	
+	public SymbolTable getTable() {
+		return this.table;
+	}
+	
 	public SymbolTableVisitor() {
 		table = new SymbolTable();
 		currClass = null;
 		currMethod = null;
 	}
-
+	
 	@Override
 	public void visit(Program n) {
 		n.m.accept(this);
@@ -48,7 +52,6 @@ public class SymbolTableVisitor implements Visitor {
 
 	@Override
 	public void visit(ClassDeclExtends n) {  // do you need to do this?
-		// TODO where to check if the extended class, n.j, is defined?
 		currClass = new ClassTable(n.i.toString());
 		for(int i = 0; i < n.vl.size(); i++)
 			n.vl.elementAt(i).accept(this);
@@ -61,12 +64,14 @@ public class SymbolTableVisitor implements Visitor {
 
 	@Override
 	public void visit(VarDecl n) {
-		if(currMethod != null)
+		if(currMethod != null) {
 			if(!currMethod.addLocal(n.i.toString(), n.t))
 				ErrorMsg.duplicateVar(n.i.toString(), currClass.getName(), currMethod.getName());
-		else
+		}
+		else {
 			if(!currClass.addVar(n.i.toString(), n.t))
 				ErrorMsg.duplicateFieldVar(n.i.toString(), currClass.getName());
+		}
 	}
 
 	@Override
@@ -85,9 +90,10 @@ public class SymbolTableVisitor implements Visitor {
 
 	@Override
 	public void visit(Formal n) {
-		if(currMethod != null) 
-			if(!currMethod.addLocal(n.i.toString(), n.t))
+		if(currMethod != null) {
+			if(!currMethod.addParam(n.i.toString(), n.t))
 				ErrorMsg.duplicateVar(n.i.toString(), currClass.getName(), currMethod.getName());
+		}
 	}
 
 	@Override

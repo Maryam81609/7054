@@ -28,6 +28,12 @@ public class ErrorMsg {
       System.exit(0);    
     }
 
+    /** Use if a class named id is extending another class named exid which is not declared. */
+    public static void unknownExtendedClass(String id, String exid) {
+    	System.err.println("SEMANTIC ERROR: Class " + id + " is extending class " + exid + " which is not declared.");
+        System.exit(0);
+    }
+    
     /** Use if a class named id is used but not declared. */
     public static void unknownClass(String id) {
       System.err.println("SEMANTIC ERROR: Class " + id + " is not declared.");
