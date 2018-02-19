@@ -1,0 +1,13 @@
+To type-check the input file do the following:
+
+- Change your working directory to Checker
+
+# Compile all files (visitor, syntaxtree, symbol, error, parser), options in [] are optional
+- ant [build] 
+
+
+# Run checker for a given input file
+- ant run -Dargs=INPUT_FILE
+
+# eg: ant parseandast -Darg='PATH_TO_FILES/arrays2.java'
+
