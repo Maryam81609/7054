@@ -13,6 +13,6 @@
   </target>
   <target name="genparser">
     <echo message="Generating java Files for the Parser!" />
-    <javacc javacchome="/usr/local/apps/javacc/javacc-4.0" target="parser/NewParser.jj" outputdirectory="parser/" />
+    <javacc javacchome="/usr/local/apps/javacc/javacc-4.0" target="src/parser/NewParser.jj" outputdirectory="src/parser/" />
   </target>
 </project>

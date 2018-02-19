@@ -1,19 +1,21 @@
 To parse and generate an AST using ANT run the following commands:
 
-- cd src/
-
 # Generate parser java files
 - ant genparser
 
 
 # Compile all files (visitor, syntaxtree, parser)
-- ant compileall
+- ant [compile]
 
 
 # Run parser for a given input file
-- ant parseandast -Dargs=INPUT_FILE
+- ant run -Dargs=PATH_TO_FILES/INPUT_FILE
 
-# eg: ant parseandast -Darg='../../parser_tests/gcd.java'
+# Example
+- assume Parserr and parser_tests are in the same directory
+- current working directory is Parserr
+- run the command
+    * ant run -Darg="../../parser_tests/gcd.java"
 
 ==========================================================
 
