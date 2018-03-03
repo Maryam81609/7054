@@ -5,9 +5,11 @@ class MainClass {
 	if(true)
 	{
 		System.out.println(11);
+		System.out.println(12);
 	}	
 	else
 	{
+		System.out.println(9);
 		System.out.println(10);
 	}
 
