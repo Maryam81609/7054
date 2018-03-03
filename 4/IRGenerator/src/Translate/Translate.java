@@ -313,8 +313,13 @@ public class Translate implements ExpVisitor
 
   public Exp visit(And n)
   {
-    /* ADD CODE --don't return null */
-    return null;
+    /* DONE CODE --don't return null */
+	Exp lExp = n.e1.accept(this);
+	Exp rExp = n.e2.accept(this);
+	
+	Exp retExp = new AndExp(lExp, rExp);
+			
+    return retExp;
   }
 
   public Exp visit(LessThan n)
