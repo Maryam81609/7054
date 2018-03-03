@@ -324,14 +324,7 @@ public class Translate implements ExpVisitor
 
   public Exp visit(LessThan n)
   {
-    /* DONE CODE -- don't return null */
-	Temp.Label t = new Temp.Label();
-	Temp.Label f = new Temp.Label();
-	Temp.Label j = new Temp.Label();
-	
-	Tree.LABEL tL = new Tree.LABEL(t);
-	Tree.LABEL fL = new Tree.LABEL(f);
-	
+    /* DONE CODE -- don't return null */	
 	Tree.Exp lExp = n.e1.accept(this).unEx();
 	Tree.Exp rExp = n.e2.accept(this).unEx();
 	
