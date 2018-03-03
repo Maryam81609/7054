@@ -267,18 +267,19 @@ public class Translate implements ExpVisitor
 
   public Exp visit(If n)
   {
-    /* ADD CODE -- don't return null */
+    /* DONE CODE -- don't return null */
 	Temp.Label t = new Temp.Label();
 	Temp.Label f = new Temp.Label();
+	Temp.Label j = new Temp.Label();
 	
 	Tree.LABEL tL = new Tree.LABEL(t);
 	Tree.LABEL fL = new Tree.LABEL(f);
 	
 	Tree.Stm condStm = n.e.accept(this).unCx(t, f);
-	Tree.Stm tBody = new Tree.SEQ(tL, n.s1.accept(this).unNx());
-	Tree.Stm fBody = new Tree.SEQ(fL, n.s2.accept(this).unNx());
+	Tree.Stm tBody = new Tree.SEQ(new Tree.SEQ(tL, n.s1.accept(this).unNx()), new Tree.JUMP(j));
+	Tree.Stm fBody = new Tree.SEQ(fL, n.s2.accept(this).unNx()); //new Tree.SEQ(new Tree.SEQ(fL, n.s2.accept(this).unNx()), new Tree.JUMP(j));
 	
-	Tree.Stm retStm = new Tree.SEQ(condStm, new Tree.SEQ(tBody, fBody));
+	Tree.Stm retStm = new Tree.SEQ(new Tree.SEQ(condStm, new Tree.SEQ(tBody, fBody)), new Tree.LABEL(j));
 	
     return new Nx(retStm);
   }
@@ -319,6 +320,15 @@ public class Translate implements ExpVisitor
   public Exp visit(LessThan n)
   {
     /* ADD CODE -- don't return null */
+	/*Temp.Label t = new Temp.Label();
+	Temp.Label f = new Temp.Label();
+	Temp.Label j = new Temp.Label();
+	
+	Tree.Exp lExp = n.e1.accept(this).unEx();
+	Tree.Exp rExp = n.e2.accept(this).unEx();
+	Tree.Stm relStm = new RelCx(Tree.CJUMP.LT, lExp, rExp).unCx(t, f);
+	
+	Tree.Stm tBody = new SEQ()*/
     return null;
   }
 
