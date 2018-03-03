@@ -2,10 +2,10 @@ class MainClass {
     public static void main(String[] a) {
 
 	// Test while
-	while(false)
-	{
-		System.out.println(222);
-	}
+	//while(false)
+	//{
+	//	System.out.println(222);
+	//}
 
 	// Test if and true and false
 	//if(true)
@@ -25,9 +25,12 @@ class MainClass {
 
 	// Test if and &&
 	//if(4 < 6 && 9 < 2 * 4)
-	//	System.out.println(1);
-	//else
-	//	System.out.println(0);
+
+	// Test if and !
+	if(!(4<3 && 6<7))
+		System.out.println(0);
+	else
+		System.out.println(1);
 		
 	// Test block
 	//{
