@@ -268,7 +268,19 @@ public class Translate implements ExpVisitor
   public Exp visit(If n)
   {
     /* ADD CODE -- don't return null */
-	return null;
+	Temp.Label t = new Temp.Label();
+	Temp.Label f = new Temp.Label();
+	
+	Tree.LABEL tL = new Tree.LABEL(t);
+	Tree.LABEL fL = new Tree.LABEL(f);
+	
+	Tree.Stm condStm = n.e.accept(this).unCx(t, f);
+	Tree.Stm tBody = new Tree.SEQ(tL, n.s1.accept(this).unNx());
+	Tree.Stm fBody = new Tree.SEQ(fL, n.s2.accept(this).unNx());
+	
+	Tree.Stm retStm = new Tree.SEQ(condStm, new Tree.SEQ(tBody, fBody));
+	
+    return new Nx(retStm);
   }
 
   public Exp visit(While n)
