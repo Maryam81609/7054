@@ -5,17 +5,24 @@ class MainClass {
 	//if(true)
 
 	// Test if and <
-	if(4 < 5)
-	{
-		System.out.println(11);
-		System.out.println(12);
-	}	
-	else
-	{
-		System.out.println(9);
-		System.out.println(10);
-	}
+	//if(4 < 5)
+	//{
+	//	System.out.println(11);
+	//	System.out.println(12);
+	//}	
+	//else
+	//{
+	//	System.out.println(9);
+	//	System.out.println(10);
+	//}
 
+
+	// Test if and &&
+	if(4 < 6 && 9 < 2 * 4)
+		System.out.println(1);
+	else
+		System.out.println(0);
+		
 	// Test block
 	//{
 	//	System.out.println(70-2*10);
