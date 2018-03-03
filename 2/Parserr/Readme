@@ -19,8 +19,6 @@ To parse and generate an AST using ANT run the following commands:
 
 ==========================================================
 
-
-
 To parse and generate an AST run the following commands:
 
 # Generate parser java files
