@@ -40,6 +40,7 @@ import java.util.HashMap;
 
 import Frame.Access;
 import Tree.BINOP;
+import Tree.Stm;
 
 public class Translate implements ExpVisitor
 {
@@ -242,14 +243,32 @@ public class Translate implements ExpVisitor
 
   public Exp visit(Block n)
   {
-    /* ADD CODE -- don't return null */
-    return null;
+    /* DONE CODE -- don't return null */
+
+	int size = n.sl.size();
+		
+	if(size == 0)
+		return null;
+	
+	Tree.Stm lastStm = n.sl.elementAt(size-1).accept(this).unNx();
+	Tree.SEQ retSEQ = null;
+	for(int i = size-1; i > 0; i--) {
+		Tree.Stm stmt = n.sl.elementAt(i-1).accept(this).unNx();
+		if(retSEQ == null)
+			retSEQ = new Tree.SEQ(stmt, lastStm);
+		else
+			retSEQ = new Tree.SEQ(stmt, retSEQ);
+	}
+	if(retSEQ == null)
+		return new Nx(lastStm);
+	else
+		return new Nx(retSEQ);
   }
 
   public Exp visit(If n)
   {
     /* ADD CODE -- don't return null */
-    return null;
+	return null;
   }
 
   public Exp visit(While n)
@@ -345,14 +364,16 @@ public class Translate implements ExpVisitor
 
   public Exp visit(True n)
   {
-    /* ADD CODE -- don't return null */
-    return null;
+    /* DONE CODE -- don't return null */
+	Tree.Exp tExp = new Tree.CONST(1);
+    return new Ex(tExp);
   }
 
   public Exp visit(False n)
   {
-    /* ADD CODE -- don't return null */
-    return null;
+    /* DONE CODE -- don't return null */
+	Tree.Exp fExp = new Tree.CONST(0);
+	return new Ex(fExp);
   }
 
   /* get appropriate Tree.Exp node for identifier */
