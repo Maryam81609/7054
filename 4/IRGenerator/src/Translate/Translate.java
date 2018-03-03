@@ -449,8 +449,11 @@ public class Translate implements ExpVisitor
 
   public Exp visit(Not n)
   {
-    /* ADD CODE -- don't return null */
-    return null;
+    /* DONE CODE -- don't return null */
+	Tree.Exp argExp = n.e.accept(this).unEx();
+	Tree.Exp retExp = new Tree.BINOP(Tree.BINOP.MINUS, new Tree.CONST(1), argExp);
+	
+    return new Ex(retExp);
   }
 
   /* node never reached by visitor */
