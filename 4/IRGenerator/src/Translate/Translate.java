@@ -319,7 +319,7 @@ public class Translate implements ExpVisitor
 
   public Exp visit(LessThan n)
   {
-    /* ADD CODE -- don't return null */
+    /* DONE CODE -- don't return null */
 	Temp.Label t = new Temp.Label();
 	Temp.Label f = new Temp.Label();
 	Temp.Label j = new Temp.Label();
