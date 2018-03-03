@@ -2,7 +2,10 @@ class MainClass {
     public static void main(String[] a) {
 
 	// Test if and true and false
-	if(true)
+	//if(true)
+
+	// Test if and <
+	if(4 < 5)
 	{
 		System.out.println(11);
 		System.out.println(12);
