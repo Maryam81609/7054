@@ -1,7 +1,10 @@
 class MainClass {
     public static void main(String[] a) {
-	//Test new array
-	System.out.println(new int[9].length);
+	//Test new array lookup
+	System.out.println(new int[4][3]);
+
+	//Test new array and length
+	System.out.println(new int[4].length);
 
 	// Test while
 	//while(false)
