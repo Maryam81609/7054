@@ -374,9 +374,28 @@ public class Translate implements ExpVisitor
 
   public Exp visit(ArrayLookup n)
   {
-    /* ADD CODE -- don't return null */
+    /* DONE CODE -- don't return null */
 	 
-	  return null;
+ 	 Tree.ESEQ arrayEseq = (Tree.ESEQ)n.e1.accept(this).unEx();
+ 	  
+ 	 Tree.Exp arrayPtr = arrayEseq.exp;
+ 	 Tree.Exp baseAdd = new Tree.MEM(arrayPtr);
+	 Tree.Exp idxExp = n.e2.accept(this).unEx();
+	  
+	 Tree.Exp offset = new Tree.BINOP(Tree.BINOP.MUL, 
+									new Tree.BINOP(Tree.BINOP.PLUS, 
+													idxExp, 
+													new Tree.CONST(0)), 
+									new Tree.CONST(currFrame.wordSize()));
+	 Tree.Exp elementAdd = new Tree.BINOP(Tree.BINOP.PLUS, 
+											baseAdd,
+											offset);
+	  
+	 Tree.Exp idxCnt = new Tree.MEM(elementAdd);
+	 Tree.Stm retSEQ = new Ex(arrayEseq).unNx();
+	 Tree.Exp retESEQ = new Tree.ESEQ(retSEQ, idxCnt);
+	  
+     return new Ex(retESEQ);
   }
 
   public Exp visit(ArrayLength n)
@@ -387,7 +406,6 @@ public class Translate implements ExpVisitor
 	
 	Tree.Exp arrayPtr = arrayEseq.exp;
 	Tree.Exp baseAdd = new Tree.MEM(arrayPtr);
-	//Tree.Exp lenExp = new Tree.MEM(baseAdd);
 	
 	Tree.Stm retSeq = new Ex(arrayEseq).unNx();
 	Tree.Exp retEseq = new Tree.ESEQ(retSeq, baseAdd);
