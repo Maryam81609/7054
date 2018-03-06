@@ -380,8 +380,17 @@ public class Translate implements ExpVisitor
 
   public Exp visit(ArrayLength n)
   {
-    /* ADD CODE -- don't return null */
-    return null;
+    /* DONE CODE -- don't return null */
+	  
+	Tree.ESEQ arrayEseq = (Tree.ESEQ)n.e.accept(this).unEx(); 
+	
+	Tree.Exp baseAdd = arrayEseq.exp;
+	Tree.Exp lenExp = new Tree.MEM(baseAdd);
+	
+	Tree.Stm retSeq = new Ex(arrayEseq).unNx();
+	Tree.Exp retEseq = new Tree.ESEQ(retSeq, lenExp);
+	
+    return new Ex(retEseq);
   }
 
   public Exp visit(Call n)
@@ -430,10 +439,38 @@ public class Translate implements ExpVisitor
    store the array length with the array */ 
   public Exp visit(NewArray n)
   {
-    /* ADD CODE
+    /* DONE CODE
      (Note: use currFrame.externalCall("alloc", new Tree.ExpList(...))) 
      -- don't return null */
-    return null;
+	  
+	  Tree.Exp lengthExp = n.e.accept(this).unEx();
+	  Tree.CONST len = null;
+	  if(lengthExp instanceof Tree.CONST)
+		  len = (Tree.CONST)lengthExp;
+		  
+	  int arrayLen = len.value;
+	  int wordSize = currFrame.wordSize();
+	  int allocSize = (arrayLen + 1) * wordSize;
+	 
+	  //allocate memory and get the address
+	  Tree.ExpList exFunArgs = new Tree.ExpList(new Tree.CONST(allocSize), null);
+	  Tree.Exp arrayAllocExp  = currFrame.externalCall("alloc", exFunArgs);
+	  
+	  Tree.Exp baseAdd = new Tree.TEMP(currFrame.RV());
+	  
+	  // Save the array length at offset 0
+	  Tree.Stm lenSave = new Tree.MOVE(new Tree.MEM(baseAdd), lengthExp);
+	  Tree.Stm retSEQ = new Tree.SEQ(new Ex(arrayAllocExp).unNx(), lenSave);
+	  
+	  for(int i = 1; i <= arrayLen; i++) {
+		  Tree.Exp offset = new Tree.CONST(i * wordSize);
+		  Tree.Exp dest = new Tree.BINOP(Tree.BINOP.PLUS, baseAdd, offset);
+		  Tree.Stm init_i = new Tree.MOVE(new Tree.MEM(dest), new Tree.CONST(0));
+		  retSEQ = new Tree.SEQ(retSEQ, init_i);
+	  }
+	  
+	  Tree.Exp retExp = new Tree.ESEQ(retSEQ, baseAdd);
+	  return new Ex(retExp);
   }
 
   /* call external "alloc" function, pass the number of bytes

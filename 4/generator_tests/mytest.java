@@ -1,5 +1,7 @@
 class MainClass {
     public static void main(String[] a) {
+	//Test new array
+	System.out.println(new int[4][3]);
 
 	// Test while
 	//while(false)
@@ -27,10 +29,10 @@ class MainClass {
 	//if(4 < 6 && 9 < 2 * 4)
 
 	// Test if and !
-	if(!(4<3 && 6<7))
-		System.out.println(0);
-	else
-		System.out.println(1);
+	//if(!(4<3 && 6<7))
+	//	System.out.println(0);
+	//else
+	//	System.out.println(1);
 		
 	// Test block
 	//{
