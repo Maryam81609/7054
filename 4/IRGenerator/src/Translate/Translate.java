@@ -375,7 +375,8 @@ public class Translate implements ExpVisitor
   public Exp visit(ArrayLookup n)
   {
     /* ADD CODE -- don't return null */
-    return null;
+	 
+	  return null;
   }
 
   public Exp visit(ArrayLength n)
@@ -384,11 +385,12 @@ public class Translate implements ExpVisitor
 	  
 	Tree.ESEQ arrayEseq = (Tree.ESEQ)n.e.accept(this).unEx(); 
 	
-	Tree.Exp baseAdd = arrayEseq.exp;
-	Tree.Exp lenExp = new Tree.MEM(baseAdd);
+	Tree.Exp arrayPtr = arrayEseq.exp;
+	Tree.Exp baseAdd = new Tree.MEM(arrayPtr);
+	//Tree.Exp lenExp = new Tree.MEM(baseAdd);
 	
 	Tree.Stm retSeq = new Ex(arrayEseq).unNx();
-	Tree.Exp retEseq = new Tree.ESEQ(retSeq, lenExp);
+	Tree.Exp retEseq = new Tree.ESEQ(retSeq, baseAdd);
 	
     return new Ex(retEseq);
   }
@@ -458,9 +460,17 @@ public class Translate implements ExpVisitor
 	  
 	  Tree.Exp baseAdd = new Tree.TEMP(currFrame.RV());
 	  
+	  
+	 //arrayPtr should have the base address of the array
+	  //Tree.MEM or Tree.TEMP
+	  Tree.Exp arrayPtr = (currFrame.allocLocal(false)).exp(new Tree.TEMP(currFrame.FP()));
+	  Tree.Stm saveArrPtr = new Tree.MOVE(arrayPtr, baseAdd);
+	  
+	  Tree.Stm retSEQ = new Tree.SEQ(new Ex(arrayAllocExp).unNx(), saveArrPtr);
+	  
 	  // Save the array length at offset 0
 	  Tree.Stm lenSave = new Tree.MOVE(new Tree.MEM(baseAdd), lengthExp);
-	  Tree.Stm retSEQ = new Tree.SEQ(new Ex(arrayAllocExp).unNx(), lenSave);
+	  retSEQ = new Tree.SEQ(new Ex(arrayAllocExp).unNx(), lenSave);
 	  
 	  for(int i = 1; i <= arrayLen; i++) {
 		  Tree.Exp offset = new Tree.CONST(i * wordSize);
@@ -469,7 +479,7 @@ public class Translate implements ExpVisitor
 		  retSEQ = new Tree.SEQ(retSEQ, init_i);
 	  }
 	  
-	  Tree.Exp retExp = new Tree.ESEQ(retSEQ, baseAdd);
+	  Tree.Exp retExp = new Tree.ESEQ(retSEQ, arrayPtr);
 	  return new Ex(retExp);
   }
 
