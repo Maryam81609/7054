@@ -40,7 +40,6 @@ import java.util.HashMap;
 
 import Frame.Access;
 import Tree.BINOP;
-import Tree.Stm;
 
 public class Translate implements ExpVisitor
 {
@@ -68,10 +67,14 @@ public class Translate implements ExpVisitor
    string, value is Access object to describe location of 
    variable (InFrame or InReg) */
   private HashMap<String, Access>  vars      = null;
-
+  
+  /* used in newobject */
+  private symbol.SymbolTable symTbl =			null;
+  
   /* constructor: set currFrame and start visitor */
-  public Translate(Program p, Frame.Frame f)
+  public Translate(Program p, Frame.Frame f, symbol.SymbolTable st)
   {
+	symTbl = st;  
     currFrame = f;
     p.accept(this);
   }
@@ -149,6 +152,7 @@ public class Translate implements ExpVisitor
    set back to null at end */
   public Exp visit(ClassDeclSimple n)
   {
+	  
     fieldVars = new HashMap<String, Integer>();
     offset = -1 * currFrame.wordSize(); 
     for (int i = 0; i < n.vl.size(); i++)
@@ -186,26 +190,61 @@ public class Translate implements ExpVisitor
     Frame.Frame oldFrame = currFrame;
     currFrame = newFrame;
 
+    vars = new HashMap<String, Access>();
     /* add locals to HashMap vars */
     for (int i = 0; i < n.vl.size(); i++)
       n.vl.elementAt(i).accept(this);
 
-    /* ADD CODE: move formals to fresh temps and add them to the HashMap vars */
     
-    /* ADD CODE: set value of Tree.Exp objPtr
-     Recall that objPtr is a pointer to the address in memory at which 
-     instance variables are stored for the current class 
-     (i.e., it is "this").
-     In the MiniJava compiler, it is passed as an argument during all
-     calls to MiniJava methods. */
-
-    /* ADD CODE: visit each statement in method body, 
+    Tree.Stm argMoves = null;
+    
+    /* DONE CODE: set value of Tree.Exp objPtr
+    Recall that objPtr is a pointer to the address in memory at which 
+    instance variables are stored for the current class 
+    (i.e., it is "this").
+    In the MiniJava compiler, it is passed as an argument during all
+    calls to MiniJava methods. */ 
+    Frame.Access fLoc = currFrame.allocLocal(false);
+	Tree.Stm objMove = new Tree.MOVE(fLoc.exp(new Tree.TEMP(currFrame.FP())), 
+									currFrame.formals.head.exp(new Tree.TEMP(currFrame.FP())));
+	objPtr = fLoc.exp(new Tree.TEMP(currFrame.FP()));
+	argMoves = objMove; //new Tree.SEQ(argMoves, objMove);
+	
+	
+	/* DONE CODE: move formals to fresh temps and add them to the HashMap vars */
+	Frame.AccessList frmls = currFrame.formals.tail; 
+    for (int i=0; i < n.fl.size(); i++) {
+    	syntaxtree.Formal f = n.fl.elementAt(i);
+    	fLoc = currFrame.allocLocal(false);
+    	vars.put(f.i.toString(), fLoc);
+   	 	Tree.Stm argMove = new Tree.MOVE(fLoc.exp(new Tree.TEMP(currFrame.FP())), 
+   	 								frmls.head.exp(new Tree.TEMP(currFrame.FP())));
+   	 	argMoves = new Tree.SEQ(argMoves, argMove);
+   	 	frmls = frmls.tail;
+    }
+    
+    /* DONE CODE: visit each statement in method body, 
      creating new Tree.SEQ nodes as needed */
     Tree.Stm body = null; // FILL IN
+    for (int i=0; i<n.sl.size(); i++) {
+    	syntaxtree.Statement s = n.sl.elementAt(i);
+    	body = new Tree.SEQ(body, s.accept(this).unNx()); 
+    }
 
-    /* ADD CODE: get return expression and group with statements of body,
+    
+    /* DONE CODE: get return expression and group with statements of body,
      then create Tree.MOVE to store return value */
-
+    if(body == null)
+    	body = argMoves;
+    else
+    	body = new Tree.SEQ(argMoves, body);
+    
+    Tree.Exp ret = n.e.accept(this).unEx();
+    Tree.ESEQ retESEQ = new Tree.ESEQ(body, ret);
+ 
+    body = new Tree.MOVE(new Tree.TEMP(currFrame.RV()), retESEQ);
+    
+    
     /* create new procedure fragment for method and add to list */
     procEntryExit(body);
     currFrame = oldFrame;
@@ -415,8 +454,36 @@ public class Translate implements ExpVisitor
 
   public Exp visit(Call n)
   {
-    /* ADD CODE -- don't return null */
-    return null;
+    /* DONE CODE -- don't return null */
+	  
+	  Tree.ESEQ callObjEseq = (Tree.ESEQ)n.e.accept(this).unEx();
+	  Tree.Exp objectPtr = callObjEseq.exp; 
+	 
+	  Tree.Stm retSeq = callObjEseq.stm; 
+	  
+	 String mn = n.i.s;
+	 Temp.Label methUniqName = new Temp.Label(mn);
+	 
+	 Tree.ExpList args = null;
+	 for (int i=n.el.size()-1; i == 0 ; i--) {
+		 Tree.Exp arg = n.el.elementAt(i).accept(this).unEx();
+		 if (args == null)
+			 args = new Tree.ExpList(arg, null);
+		 else
+			 args.tail = new Tree.ExpList(arg, null);
+	 }
+	 
+	 if (args == null)
+		 args = new Tree.ExpList(objectPtr, null);
+	 else
+		 args.tail = new Tree.ExpList(objectPtr, null);
+	 
+	 Tree.Exp methodCall = new Tree.CALL(new Tree.NAME(methUniqName), args);
+	 
+	 retSeq = new Tree.SEQ(retSeq, new Ex(methodCall).unNx());
+	 Tree.ESEQ retESeq = new Tree.ESEQ(retSeq, new Tree.TEMP(currFrame.RV()));
+	  
+    return new Ex(retESeq);
   }
 
   public Exp visit(IntegerLiteral n)
@@ -479,7 +546,7 @@ public class Translate implements ExpVisitor
 	  Tree.Exp baseAdd = new Tree.TEMP(currFrame.RV());
 	  
 	  
-	 //arrayPtr should have the base address of the array
+	  //arrayPtr should have the base address of the array
 	  //Tree.MEM or Tree.TEMP
 	  Tree.Exp arrayPtr = (currFrame.allocLocal(false)).exp(new Tree.TEMP(currFrame.FP()));
 	  Tree.Stm saveArrPtr = new Tree.MOVE(arrayPtr, baseAdd);
@@ -505,13 +572,38 @@ public class Translate implements ExpVisitor
    needed (number of instance variables * wordsize) as
    the argument, initialize each instance variable to 0 */  
   public Exp visit(NewObject n)
-  {
-    /* ADD CODE
+  { 
+    /* DONE CODE 
      (Note: you will need to get the number of field variables from your
      symbol table)  -- don't return null */
-    return null;
+	  
+	  symbol.ClassTable objClass = symTbl.getClass(n.i.s);
+	  int fldCnt = objClass.varCount();
+	  int wordSize = currFrame.wordSize();
+	  int allocSize = fldCnt * wordSize;
+	 
+	  //allocate memory and get the address
+	  Tree.ExpList exFunArgs = new Tree.ExpList(new Tree.CONST(allocSize), null);
+	  Tree.Exp objAllocExp  = currFrame.externalCall("alloc", exFunArgs);
+	  Tree.Exp objBaseAdd = new Tree.TEMP(currFrame.RV());
+	  
+	  Tree.Exp objectPtr = (currFrame.allocLocal(false)).exp(new Tree.TEMP(currFrame.FP()));
+	  Tree.Stm saveObjectPtr = new Tree.MOVE(objectPtr, objBaseAdd);
+	  
+	  Tree.Stm retSEQ = new Tree.SEQ(new Ex(objAllocExp).unNx(), saveObjectPtr);
+	  
+	  for(int i = 0; i < fldCnt; i++) {
+		  Tree.Exp offset = new Tree.CONST(i * wordSize);
+		  Tree.Exp dest = new Tree.BINOP(Tree.BINOP.PLUS, objBaseAdd, offset);
+		  Tree.Stm init_i = new Tree.MOVE(new Tree.MEM(dest), new Tree.CONST(0));
+		  retSEQ = new Tree.SEQ(retSEQ, init_i);
+	  }
+	  
+	  Tree.Exp retExp = new Tree.ESEQ(retSEQ, objectPtr);
+	  return new Ex(retExp);
   }
 
+  
   public Exp visit(Not n)
   {
     /* DONE CODE -- don't return null */

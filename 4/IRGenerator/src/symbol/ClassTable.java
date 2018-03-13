@@ -47,6 +47,10 @@ public class ClassTable {
 		return this.vars.keys();
 	}
 	
+	public int varCount() {
+		return vars.size();
+	}
+	
 	public Enumeration<String> methodNames(){
 		return this.methods.keys();
 	}
