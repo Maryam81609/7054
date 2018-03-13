@@ -427,24 +427,32 @@ public class Translate implements ExpVisitor
   public Exp visit(ArrayLookup n)
   {
     /* DONE CODE -- don't return null */
-	 
- 	 Tree.ESEQ arrayEseq = (Tree.ESEQ)n.e1.accept(this).unEx();
- 	  
- 	 Tree.Exp arrayPtr = arrayEseq.exp;
+	 Tree.Exp arrayExp = n.e1.accept(this).unEx();
+	 Tree.Exp arrayPtr = null;
+	 if(arrayExp instanceof Tree.ESEQ)
+	 {
+		 Tree.ESEQ arrayEseq = (Tree.ESEQ)arrayExp;
+		 arrayPtr = arrayEseq.exp;
+	 }
+	 else
+	 {
+		 arrayPtr = arrayExp;
+	 }
+
  	 Tree.Exp baseAdd = new Tree.MEM(arrayPtr);
 	 Tree.Exp idxExp = n.e2.accept(this).unEx();
 	  
 	 Tree.Exp offset = new Tree.BINOP(Tree.BINOP.MUL, 
 									new Tree.BINOP(Tree.BINOP.PLUS, 
 													idxExp, 
-													new Tree.CONST(0)), 
+													new Tree.CONST(1)), 
 									new Tree.CONST(currFrame.wordSize()));
 	 Tree.Exp elementAdd = new Tree.BINOP(Tree.BINOP.PLUS, 
 											baseAdd,
 											offset);
 	  
 	 Tree.Exp idxCnt = new Tree.MEM(elementAdd);
-	 Tree.Stm retSEQ = new Ex(arrayEseq).unNx();
+	 Tree.Stm retSEQ = new Ex(arrayExp).unNx();
 	 Tree.Exp retESEQ = new Tree.ESEQ(retSEQ, idxCnt);
 	  
      return new Ex(retESEQ);
@@ -453,13 +461,23 @@ public class Translate implements ExpVisitor
   public Exp visit(ArrayLength n)
   {
     /* DONE CODE -- don't return null */
-	  
-	Tree.ESEQ arrayEseq = (Tree.ESEQ)n.e.accept(this).unEx(); 
+
+	Tree.Exp arrayExp = n.e.accept(this).unEx();
+	Tree.Exp arrayPtr = null;
 	
-	Tree.Exp arrayPtr = arrayEseq.exp;
+	if(arrayExp instanceof Tree.ESEQ)
+	{
+		Tree.ESEQ arrayEseq = (Tree.ESEQ)arrayExp; 
+		arrayPtr = arrayEseq.exp;
+	}
+	else
+	{
+		arrayPtr = arrayExp;
+	}
+	
 	Tree.Exp baseAdd = new Tree.MEM(arrayPtr);
 	
-	Tree.Stm retSeq = new Ex(arrayEseq).unNx();
+	Tree.Stm retSeq = new Ex(arrayExp).unNx();
 	Tree.Exp retEseq = new Tree.ESEQ(retSeq, baseAdd);
 	
     return new Ex(retEseq);
