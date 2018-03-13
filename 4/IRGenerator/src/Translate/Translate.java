@@ -40,6 +40,7 @@ import java.util.HashMap;
 
 import Frame.Access;
 import Tree.BINOP;
+import Tree.TEMP;
 
 public class Translate implements ExpVisitor
 {
@@ -365,10 +366,15 @@ public class Translate implements ExpVisitor
 	  
 	  Tree.Exp baseAdd = getIdTree(n.i.toString());
 	  
-	  int offset = ((Tree.CONST)n.e1.accept(this).unEx()).value + 1;
+	  
+	  Tree.Exp offsetExp = new Tree.BINOP(Tree.BINOP.PLUS, n.e1.accept(this).unEx(), new Tree.CONST(1));
+	  //int offset = ((Tree.CONST)n.e1.accept(this).unEx()).value + 1;
 	  Tree.Exp target = new Tree.MEM(new Tree.BINOP(Tree.BINOP.PLUS, 
 			  										baseAdd, 
-			  										new Tree.CONST(offset * currFrame.wordSize())));
+			  										new Tree.BINOP(Tree.BINOP.MUL, 
+			  												offsetExp, 
+			  												new Tree.CONST(currFrame.wordSize()))));
+			  										//new Tree.CONST(offset * currFrame.wordSize())));
 	  
 	  Tree.Stm setTarget = new Tree.MOVE(target, n.e2.accept(this).unEx());
 	  
@@ -486,11 +492,19 @@ public class Translate implements ExpVisitor
   public Exp visit(Call n)
   {
     /* DONE CODE -- don't return null */
-	  
-	  Tree.ESEQ callObjEseq = (Tree.ESEQ)n.e.accept(this).unEx();
-	  Tree.Exp objectPtr = callObjEseq.exp; 
+	  Tree.Exp callObjExp = n.e.accept(this).unEx();
+	  Tree.Exp objectPtr = null;
 	 
-	  Tree.Stm retSeq = callObjEseq.stm; 
+	  if(callObjExp instanceof Tree.ESEQ)
+	  {
+		  Tree.ESEQ callObjEseq = (Tree.ESEQ)callObjExp;
+		  objectPtr = callObjEseq.exp; 
+	  }
+	  else
+		  objectPtr = callObjExp;
+	  
+
+	  Tree.Stm retSeq = new Ex(callObjExp).unNx();//callObjEseq.stm; 
 	  
 	 String mn = n.i.s;
 	 Temp.Label methUniqName = new Temp.Label(mn);
@@ -561,22 +575,16 @@ public class Translate implements ExpVisitor
      (Note: use currFrame.externalCall("alloc", new Tree.ExpList(...))) 
      -- don't return null */
 	  
-	  Tree.Exp lengthExp = n.e.accept(this).unEx();
-	  Tree.CONST len = null;
-	  if(lengthExp instanceof Tree.CONST)
-		  len = (Tree.CONST)lengthExp;
-		  
-	  int arrayLen = len.value;
+	  Tree.Exp lengthExp = n.e.accept(this).unEx(); 
 	  int wordSize = currFrame.wordSize();
-	  int allocSize = (arrayLen + 1) * wordSize;
-	 
+	  Tree.Exp allocSizeExp = new Tree.BINOP(Tree.BINOP.MUL, 
+			  									new Tree.BINOP(Tree.BINOP.PLUS, lengthExp, new Tree.CONST(1)), 
+			  									new Tree.CONST(wordSize));
 	  //allocate memory and get the address
-	  Tree.ExpList exFunArgs = new Tree.ExpList(new Tree.CONST(allocSize), null);
-	  Tree.Exp arrayAllocExp  = currFrame.externalCall("alloc", exFunArgs);
-	  
+	  Tree.ExpList exFunArgs = new Tree.ExpList(allocSizeExp, null);
+	  Tree.Exp arrayAllocExp  = currFrame.externalCall("alloc", exFunArgs);	  
 	  Tree.Exp baseAdd = new Tree.TEMP(currFrame.RV());
-	  
-	  
+
 	  //arrayPtr should have the base address of the array
 	  //Tree.MEM or Tree.TEMP
 	  Tree.Exp arrayPtr = (currFrame.allocLocal(false)).exp(new Tree.TEMP(currFrame.FP()));
@@ -586,15 +594,38 @@ public class Translate implements ExpVisitor
 	  
 	  // Save the array length at offset 0
 	  Tree.Stm lenSave = new Tree.MOVE(new Tree.MEM(baseAdd), lengthExp);
-	  retSEQ = new Tree.SEQ(new Ex(arrayAllocExp).unNx(), lenSave);
+	  retSEQ = new Tree.SEQ(retSEQ, lenSave);
 	  
-	  for(int i = 1; i <= arrayLen; i++) {
-		  Tree.Exp offset = new Tree.CONST(i * wordSize);
-		  Tree.Exp dest = new Tree.BINOP(Tree.BINOP.PLUS, baseAdd, offset);
-		  Tree.Stm init_i = new Tree.MOVE(new Tree.MEM(dest), new Tree.CONST(0));
-		  retSEQ = new Tree.SEQ(retSEQ, init_i);
-	  }
+	  Temp.Label test = new Temp.Label();
+	  Temp.Label body = new Temp.Label();
+	  Temp.Label done = new Temp.Label();
+	  		  
+	  Frame.Access tempLoc = currFrame.allocLocal(false);
+	  Tree.Exp tempExp = tempLoc.exp(new Tree.TEMP(currFrame.FP()));
+	  Tree.Stm lenMove = new Tree.MOVE(tempExp, lengthExp);
+	  retSEQ = new Tree.SEQ(retSEQ, lenMove);
 	  
+	  Tree.Stm testStm = new RelCx(Tree.CJUMP.LT, new Tree.CONST(0), tempExp).unCx(body, done);
+
+	  Tree.Exp target = new Tree.BINOP(Tree.BINOP.PLUS,
+										baseAdd, 
+										new Tree.BINOP(Tree.BINOP.MUL, 
+														tempExp, 
+														new Tree.CONST(currFrame.wordSize())));
+	  Tree.Stm t3 = new Tree.SEQ(new Tree.MOVE(
+			  						new Tree.MEM(target), 
+			  						new Tree.CONST(0)) , 
+			  					 new Tree.MOVE(tempExp, new Tree.BINOP(Tree.BINOP.MINUS, tempExp, new Tree.CONST(1))));
+			  						
+	  
+	  Tree.Stm headerStm = new Tree.SEQ(new Tree.LABEL(test), testStm);
+	  Tree.Stm bodyStm = new Tree.SEQ(new Tree.SEQ(new Tree.LABEL(body), t3),
+			  						  new Tree.JUMP(test));
+	  
+	  Tree.Stm whileStm = new Tree.SEQ(new Tree.SEQ(headerStm, bodyStm),
+			  							new Tree.LABEL(done));
+	  
+	  retSEQ = new Tree.SEQ(retSEQ, whileStm);  
 	  Tree.Exp retExp = new Tree.ESEQ(retSEQ, arrayPtr);
 	  return new Ex(retExp);
   }
