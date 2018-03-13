@@ -196,7 +196,6 @@ public class Translate implements ExpVisitor
     for (int i = 0; i < n.vl.size(); i++)
       n.vl.elementAt(i).accept(this);
 
-    
     Tree.Stm argMoves = null;
     
     /* DONE CODE: set value of Tree.Exp objPtr
@@ -338,7 +337,7 @@ public class Translate implements ExpVisitor
 	Tree.Stm testStm = new Tree.SEQ(new Tree.LABEL(test), testInsts);
 
 	Tree.Stm bodyInsts = n.s.accept(this).unNx();
-	Tree.Stm bodyStm = new Tree.SEQ(new Tree.LABEL(body), new Tree.SEQ(bodyInsts, new Tree.JUMP(test)));
+	Tree.Stm bodyStm = new Tree.SEQ(new Tree.SEQ(new Tree.LABEL(body), bodyInsts), new Tree.JUMP(test));
 	
 	Tree.Stm retStm = new Tree.SEQ(new Tree.SEQ(testStm, bodyStm), new Tree.LABEL(done));
 	
@@ -398,9 +397,9 @@ public class Translate implements ExpVisitor
 	Tree.Exp lExp = n.e1.accept(this).unEx();
 	Tree.Exp rExp = n.e2.accept(this).unEx();
 	
-	Tree.Exp retStm = new RelCx(Tree.CJUMP.LT, lExp, rExp).unEx();
+	//Tree.Exp retStm = new RelCx(Tree.CJUMP.LT, lExp, rExp).unEx();
 			
-	return new Ex(retStm);
+	return new RelCx(Tree.CJUMP.LT, lExp, rExp); //new Ex(retStm);
   }
 
   public Exp visit(Plus n)
@@ -510,18 +509,31 @@ public class Translate implements ExpVisitor
 	 Temp.Label methUniqName = new Temp.Label(mn);
 	 
 	 Tree.ExpList args = null;
-	 for (int i=n.el.size()-1; i == 0 ; i--) {
+	 Tree.ExpList last = null;
+	 for (int i=n.el.size()-1; i >= 0 ; i--) {
 		 Tree.Exp arg = n.el.elementAt(i).accept(this).unEx();
 		 if (args == null)
+		 {
 			 args = new Tree.ExpList(arg, null);
+			 last = args;
+		 }
 		 else
-			 args.tail = new Tree.ExpList(arg, null);
+		 {
+			 last.tail = new Tree.ExpList(arg, null);
+			 last = last.tail;
+		 }
 	 }
 	 
 	 if (args == null)
+	 {
 		 args = new Tree.ExpList(objectPtr, null);
+		 last = args;
+	 }
 	 else
-		 args.tail = new Tree.ExpList(objectPtr, null);
+	 {
+		 last.tail = new Tree.ExpList(objectPtr, null);
+		 last = last.tail;
+	 }
 	 
 	 Tree.Exp methodCall = new Tree.CALL(new Tree.NAME(methUniqName), args);
 	 
