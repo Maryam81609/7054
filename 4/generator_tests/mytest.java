@@ -64,7 +64,8 @@ class Double {
     int x;
     int y;
     public int getDouble(int x) { 
-	int y[3];
+	int[] y;
+	y = new int[3];
 	y[2] = 6
 	return x*y[2]; 
     }
