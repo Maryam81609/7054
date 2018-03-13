@@ -65,6 +65,7 @@ public class TypeCheckVisitor implements TypeVisitor {
 		for(int i=0; i<n.sl.size(); i++) {
 			n.sl.elementAt(i).accept(this);
 		}
+		n.i = new Identifier(currClass.getName() + "_" + n.i.s);
 		currMethod = null;
 		return null;
 	}
@@ -266,6 +267,7 @@ public class TypeCheckVisitor implements TypeVisitor {
 					ErrorMsg.typeMismatchCall(methodTbl.getName(), expClassTbl.getName(), i+1, paramType);
 			}
 		}
+		n.i = new Identifier(expClassName + "_" + n.i.s);
 		return methodTbl.getType();
 	}
 
