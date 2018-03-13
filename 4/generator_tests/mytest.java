@@ -1,10 +1,13 @@
 class MainClass {
     public static void main(String[] a) {
+	//Test newobject
+	System.out.println(new Double().getDouble(3));
+
 	//Test new array lookup
-	System.out.println(new int[4][3]);
+	//System.out.println(new int[4][3]);
 
 	//Test new array and length
-	System.out.println(new int[4].length);
+	//System.out.println(new int[4].length);
 
 	// Test while
 	//while(false)
@@ -52,5 +55,11 @@ class MainClass {
 	// Test integer literal
 	//System.out.println(7);
     }
+}
+
+class Double {
+    int x;
+    int y;
+    public int getDouble(int x) { return x*2; }
 }
 	    
