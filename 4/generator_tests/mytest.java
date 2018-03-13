@@ -1,7 +1,10 @@
 class MainClass {
     public static void main(String[] a) {
+	//Test arrayassign
+	System.out.println(new Double().getDouble(5));
+
 	//Test newobject and method call
-	System.out.println(new Dou().getDouble(2) * new Double().getDouble(5));
+	//System.out.println(new Dou().getDouble(2) * new Double().getDouble(5));
 
 	//Test new array lookup
 	//System.out.println(new int[4][3]);
@@ -60,7 +63,11 @@ class MainClass {
 class Double {
     int x;
     int y;
-    public int getDouble(int x) { return x*2; }
+    public int getDouble(int x) { 
+	int y[3];
+	y[2] = 6
+	return x*y[2]; 
+    }
 }
 
 class Dou {
