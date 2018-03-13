@@ -228,7 +228,10 @@ public class Translate implements ExpVisitor
     Tree.Stm body = null; // FILL IN
     for (int i=0; i<n.sl.size(); i++) {
     	syntaxtree.Statement s = n.sl.elementAt(i);
-    	body = new Tree.SEQ(body, s.accept(this).unNx()); 
+    	if(body == null)
+    		body = s.accept(this).unNx();
+    	else
+    		body = new Tree.SEQ(body, s.accept(this).unNx()); 
     }
 
     
@@ -358,8 +361,18 @@ public class Translate implements ExpVisitor
 
   public Exp visit(ArrayAssign n)
   {
-    /* ADD CODE -- don't return null */
-    return null;
+    /* DONE CODE -- don't return null */
+	  
+	  Tree.Exp baseAdd = getIdTree(n.i.toString());
+	  
+	  int offset = ((Tree.CONST)n.e1.accept(this).unEx()).value + 1;
+	  Tree.Exp target = new Tree.MEM(new Tree.BINOP(Tree.BINOP.PLUS, 
+			  										baseAdd, 
+			  										new Tree.CONST(offset * currFrame.wordSize())));
+	  
+	  Tree.Stm setTarget = new Tree.MOVE(target, n.e2.accept(this).unEx());
+	  
+	  return new Nx(setTarget);
   }
 
   public Exp visit(And n)
