@@ -26,8 +26,10 @@ import java.nio.file.Paths;
 public class NewParser implements NewParserConstants {
   public static void main(String[] args) throws FileNotFoundException {
         try{
-                File f = new File(args[0]);
-                String fName = f.getName();
+        		//String inputFile = "/home/maryam/7054/4/generator_tests/mytest.java";
+        		
+                File f = new File(args[0]);//inputFile); ///
+               // String fName = f.getName();
                 InputStream in = new FileInputStream(f);
                 Program root = new NewParser(in).Goal(); //new NewParser(System.in).Goal(); //
                 SymbolTableVisitor symTblVisitor = new SymbolTableVisitor();
@@ -36,20 +38,25 @@ public class NewParser implements NewParserConstants {
                 root.accept(new TypeCheckVisitor(symTable));
                 
                 // Satge4: IR Generation
-                Translate ir = new Translate(root, new MipsFrame());
+                Translate ir = new Translate(root, new MipsFrame(), symTable);
                 //ir.printResults();
                 
                 Frag frag = ir.getResults();
-                ProcFrag pf = (ProcFrag) frag;
-            	Tree.Stm fragBody = pf.body;
+                GenCVisitor g = new GenCVisitor();
+                while(frag != null)
+                {
+                	ProcFrag pf = (ProcFrag) frag;
+            		Tree.Stm fragBody = pf.body;
             	
-            	// Canonicalize
-            	TraceSchedule t = new TraceSchedule(new BasicBlocks(new Canon().linearize(fragBody)));
-            	GenCVisitor g = new GenCVisitor();
-            	
-            	// Generate equivalent C code 
-            	g.codegen(pf,  t.stms);
-            	g.print();
+            		// Canonicalize
+            		TraceSchedule t = new TraceSchedule(new BasicBlocks(new Canon().linearize(fragBody)));
+            		
+            		// Generate equivalent C code 
+            		g.codegen(pf,  t.stms);
+            		
+            		frag = frag.next;
+                }
+                g.print();
     }
     catch(ParseException e){
       System.err.println("SyntaxError: " + e.getMessage());
