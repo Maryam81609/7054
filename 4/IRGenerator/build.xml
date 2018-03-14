@@ -1,8 +1,8 @@
 <project name="A MiniJava Parser" default="build">
   <target name="run">
-    <echo message="Type checking ..." />
+    <echo message="Generating IR-Tree ..." />
     <java fork="true" dir="bin/" classname="parser/NewParser">
-       <classpath path="bin/" />
+      <classpath path="bin/" />
        <arg line="${args}" />
     </java>
   </target>
