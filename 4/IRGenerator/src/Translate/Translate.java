@@ -433,20 +433,18 @@ public class Translate implements ExpVisitor
   {
     /* DONE CODE -- don't return null */
 	 Tree.Exp arrayExp = n.e1.accept(this).unEx();
-	 Tree.Exp arrayPtr = null;
+	 Tree.Exp baseAdd = null;
 	 if(arrayExp instanceof Tree.ESEQ)
 	 {
 		 Tree.ESEQ arrayEseq = (Tree.ESEQ)arrayExp;
-		 arrayPtr = arrayEseq.exp;
+		 baseAdd = arrayEseq.exp;
 	 }
 	 else
 	 {
-		 arrayPtr = arrayExp;
+		 baseAdd = arrayExp;
 	 }
 
- 	 Tree.Exp baseAdd = new Tree.MEM(arrayPtr);
-	 Tree.Exp idxExp = n.e2.accept(this).unEx();
-	  
+	 Tree.Exp idxExp = n.e2.accept(this).unEx();	  
 	 Tree.Exp offset = new Tree.BINOP(Tree.BINOP.MUL, 
 									new Tree.BINOP(Tree.BINOP.PLUS, 
 													idxExp, 
