@@ -2,7 +2,8 @@
 
 export MJPROG=$1
 export MJOUT="${MJPROG%.*}.out"
-export CPROG=$2
+export CPROG="${MJPROG%.*}.c" 
+#$2
 export CEXE=${CPROG%.*}
 export COUT="${CPROG%.*}.out"
 
@@ -33,4 +34,9 @@ $PWD/../generator_tests_c/$CEXE > $PWD/../generator_tests_c/$COUT
 diff $PWD/../../generator_tests/$MJOUT $PWD/../generator_tests_c/$COUT
 
 
+echo "MiniJava output:" 
+cat $PWD/../../generator_tests/$MJOUT 
+
+echo "C output:" 
+cat $PWD/../generator_tests_c/$COUT
 #cd ../
