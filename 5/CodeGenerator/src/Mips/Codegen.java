@@ -61,6 +61,7 @@ public class Codegen implements TempVisitor
   public void visit(Tree.MOVE n)
   {
 	  // TO DO: fill in
+	  //new OPER("sw , " + ((Tree.CONST)n.exp).value + "\n", )
 	  
   }
 
@@ -136,10 +137,19 @@ public class Codegen implements TempVisitor
 
   public Temp.Temp visit(Tree.MEM n)
   {
-    // TO DO: fill in
+    // TEST DONE: fill in
 	  Temp.Temp r1 = new Temp.Temp();
+	  /*if(n.exp instanceof Tree.BINOP && ((Tree.BINOP)n.exp).binop == Tree.BINOP.PLUS) {
+		  if(((Tree.BINOP)n.exp).left instanceof Tree.CONST) {
+			  emit(new OPER("lw r1, r2 + " + ((Tree.CONST)((Tree.BINOP)n.exp).left).value + "\n", )
+		  }
+	  }*/
 	  if(n.exp instanceof Tree.CONST) {
-		  
+		  emit(new OPER("lw r1, " + ((Tree.CONST)n.exp).value + "\n", new Temp.TempList(r1, null), null));
+	  }
+	  else {
+		  Temp.Temp add = n.exp.accept(this);
+		  emit(new OPER("lw r1, add\n", new Temp.TempList(r1, null), new Temp.TempList(add, null)));
 	  }
 	  
 	  return r1;
