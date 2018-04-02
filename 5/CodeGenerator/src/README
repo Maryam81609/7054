@@ -1,0 +1,52 @@
+Assem package
+      --Instr.java, InstrList.java, LABEL.java, MOVE.java, OPER.java, Targets.java
+      **This code really is not needed until Stage 5.  
+        It is included here only so that parts of the provided code will compile.
+	(It should not be necessary to modify any of the code in this package.)
+
+Canon package
+      --BasicBlocks.java, Canon.java, ExpCall.java, MoveCall.java, StmExpList.java,
+        StmListList.java, Traceschedule.java
+      **This code is used to simplify the IR trees created in Part 1 of Stage 4.
+        See the assignment specifications for instructions on using these classes.
+
+Frame package
+      --Access.java, AccessList.java, Frame.java
+      **Machine-independent representation of the stack frame.
+	(It should not be necessary to modify any of the code in this package.)
+
+IR_visitor package
+      --GenCVisitor.java			**Produces C code from an IR tree.
+      --StringVisitor.java			**Interface implemented by GenCVisitor.
+      --IntVisitor.java, TempVisitor.java  	**Interfaces used in Stage 5.
+        (You may modify GenCVisitor.java, if necessary.)
+
+Mips package
+     --InFrame.java, InReg.java, MipsFrame.java 
+     **Machine-dependent representation of the stack frame.
+       (You may modify MipsFrame.java, if necessary.)
+
+Temp package
+     --CombineMap.java, DefaultMap.java, Label.java, LabelList.java, Temp.java, 
+       TempList.java, TempMap.java
+     **Representation of registers (temps) and labels in the abstract machine.
+	(It should not be necessary to modify any of the code in this package.)
+
+Translate package
+     --AndExp.java, Cx.java, Ex.java, Exp.java, Nx.java, RelCx.java
+     **Wrapper classes for IR tree nodes. 
+     --Frag.java, ProcFrag.java	   **Representation of a function declaration.
+     --Translate.java		   **Visitor that translates an AST to IR trees.
+       (You must complete Translate.java where indicated by comments.  
+        It should not be necessary to modify any other code in this package.)
+
+Tree package
+     --BINOP.java, CALL.java, CJUMP.java, CONST.java, ESEQ.java, EXP1.java, Exp.java,
+       ExpList.java, JUMP.java, LABEL.java, MEM.java, MOVE.java, NAME.java, Print.java,
+       SEQ.java, Stm.java, StmList.java, TEMP.java
+     **Representation of the intermediate representation (IR) tree.
+       (It should not be necessary to modify any of the code in this package.)
+
+visitor package
+     --ExpVisitor.java		**Interface implemented by Translate.java.
+       (It should not be necessary to modify this file.)
