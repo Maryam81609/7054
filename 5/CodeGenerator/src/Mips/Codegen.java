@@ -68,8 +68,7 @@ public class Codegen implements TempVisitor
 		  }
 		  else {
 			  Temp.Temp r2 = n.src.accept(this);
-			  emit(new OPER("move r1, r2\n", new Temp.TempList(r1, null), 
-					  new Temp.TempList(r2, null)));
+			  emit(new MOVE("move r1, r2\n", r1, r2));
 		  }
 	  }
 	  else if(n.dst instanceof Tree.MEM) {
