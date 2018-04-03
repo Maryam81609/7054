@@ -60,8 +60,28 @@ public class Codegen implements TempVisitor
 
   public void visit(Tree.MOVE n)
   {
-	  // TO DO: fill in
-	  //new OPER("sw , " + ((Tree.CONST)n.exp).value + "\n", )
+	  // TEST DONE: fill in
+	  Temp.Temp r1 = n.dst.accept(this);
+	  if(n.dst instanceof Tree.TEMP) {
+		  if(n.src instanceof Tree.CONST) {
+			  emit(new OPER("li r1, " + ((Tree.CONST)n.src).value + "\n", new Temp.TempList(r1, null), null));
+		  }
+		  else {
+			  Temp.Temp r2 = n.src.accept(this);
+			  emit(new OPER("move r1, r2\n", new Temp.TempList(r1, null), 
+					  new Temp.TempList(r2, null)));
+		  }
+	  }
+	  else if(n.dst instanceof Tree.MEM) {
+		  if(n.src instanceof Tree.CONST) {
+			  emit(new OPER("sw " + ((Tree.CONST)n.src).value + ", r1\n", new Temp.TempList(r1, null), null));
+		  }
+		  else {
+			  Temp.Temp r2 = n.src.accept(this);
+			  emit(new OPER("sw r2, r1\n", new Temp.TempList(r1, null), 
+					  new Temp.TempList(r2, null)));  
+		  }
+	  }
 	  
   }
 
