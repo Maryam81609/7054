@@ -63,7 +63,18 @@ public class Codegen implements TempVisitor
 
   public void visit(Tree.CJUMP n)
   {
-    // TO DO: fill in
+    // TEST DONE: fill in
+	  switch(n.relop) {
+	  case Tree.CJUMP.LT:
+		  Temp.Temp r2 = n.left.accept(this);
+		  Temp.Temp r3 = n.right.accept(this);
+		  emit(new OPER("blt r2, r3, r1", null, new Temp.TempList(r2, 
+				  new Temp.TempList(r3, null)), new Temp.LabelList(n.iftrue, null)));
+		  break;
+	  default:
+		  break;
+	  }
+	  
   }
 
   public void visit(Tree.MOVE n)
