@@ -6,6 +6,8 @@ import Assem.LABEL;
 import Assem.MOVE;
 import Assem.OPER;
 import IR_visitor.TempVisitor;
+import Temp.Label;
+import Tree.Exp;
 
 public class Codegen implements TempVisitor
 {
@@ -48,13 +50,19 @@ public class Codegen implements TempVisitor
 
   public void visit(Tree.JUMP n)
   {
-    // TO DO: fill in
+    // TEST DONE: fill in
+	  if(n.exp instanceof Tree.NAME) {
+		  Temp.Label l = ((Tree.NAME)n.exp).label;
+		  emit(new OPER("j " + l.toString() +"\n", null, null, new Temp.LabelList(l, null)));
+	  }
+	  else {
+		  Temp.Temp r1 = n.exp.accept(this);
+		  emit(new OPER("jr r1\n", new Temp.TempList(r1, null), null));
+	  }
   }
 
   public void visit(Tree.CJUMP n)
   {
-	 int i = 0;
-	 System.out.println(i);
     // TO DO: fill in
   }
 
