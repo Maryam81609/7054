@@ -137,6 +137,8 @@ public class Translate implements ExpVisitor
     /* visit single statement in method body */
     Tree.Stm s = (n.s.accept(this)).unNx();
 
+    s = new Tree.SEQ(new Tree.LABEL(new Temp.Label("main")), s);
+    
     /* there is no return expression, so return 0
      then create Tree.MOVE to store return value */
     Tree.Exp retExp = new Tree.CONST(0);
@@ -225,7 +227,8 @@ public class Translate implements ExpVisitor
     
     /* DONE CODE: visit each statement in method body, 
      creating new Tree.SEQ nodes as needed */
-    Tree.Stm body = null; // FILL IN
+    //Tree.Stm body = null; // FILL IN
+    Tree.Stm body = new Tree.LABEL(new Temp.Label(n.i.s));
     for (int i=0; i<n.sl.size(); i++) {
     	syntaxtree.Statement s = n.sl.elementAt(i);
     	if(body == null)
