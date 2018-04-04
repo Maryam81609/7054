@@ -34,8 +34,8 @@ import Assem.LABEL;
 public class NewParser implements NewParserConstants {
   public static void main(String[] args) throws FileNotFoundException {
         try{
-        		boolean temp_names = true;
-        		String inputFile = "/home/maryam/7054/5/generator_tests/and.java"; //simpleFunc.java";//just_main.java";//just_main.java";
+        		boolean temp_names = false;
+        		String inputFile = "/home/maryam/7054/5/generator_tests/just_main.java";//and.java"; // //simpleFunc.java";//
         		
                 File f = new File(inputFile); //args[0]);///args[0]);//
                // String fName = f.getName();
@@ -47,17 +47,22 @@ public class NewParser implements NewParserConstants {
                 root.accept(new TypeCheckVisitor(symTable));
                 
                 // Satge4: IR Generation
-                Translate ir = new Translate(root, new MipsFrame(), symTable);
+                MipsFrame fr = new MipsFrame();
+                Translate ir = new Translate(root, fr, symTable);
                 //ir.printResults();
                 
                 Frag frag = ir.getResults();
                 //GenCVisitor g = new GenCVisitor();
                 TempVisitor gen;
+                Temp.TempMap map;
+                MipsFrame frame = new MipsFrame();
                 if(temp_names) {
-                	gen = new Codegen(new MipsFrame());
+                	gen = new Codegen(frame);
+                	map = new Temp.DefaultMap();
                 }
                 else {
-                	gen = new SpimCodegen(new MipsFrame());
+                	gen = new SpimCodegen(frame);
+                	map = new Temp.RegMap(frame);
                 }
                 int i = 0;
                 while(frag != null)
@@ -74,8 +79,9 @@ public class NewParser implements NewParserConstants {
 
             		// Generate Assembly Code
             		if(i == 0) {
+            			System.out.print("\t.text\n" + "\t.globl main\n");
             			Instr tempInstr = new LABEL("main:\n", new Temp.Label("main"));
-            			System.out.println(tempInstr.format(new Temp.RegMap())); //.DefaultMap()));
+            			System.out.println(tempInstr.format(map)); //.DefaultMap()));
             			i = i + 1;
             		}
             		gen.prologue();
@@ -86,7 +92,7 @@ public class NewParser implements NewParserConstants {
             			InstrList inss = instrLst;
             			//Instr ins = inss.head;
             			while(inss != null) {
-            				System.out.println(inss.head.format(new Temp.DefaultMap()));
+            				System.out.println(inss.head.format(map));
             				inss = inss.tail;
             				//ins = inss != null ? inss.head : null;
             			}
@@ -95,7 +101,8 @@ public class NewParser implements NewParserConstants {
             		gen.epilogue();
             		frag = frag.next;
                 }
-                System.out.println("j _finish");
+                System.out.println("\tj _finish");
+                System.out.println("\n # MiniJava Library\n" + frame.mjLibrary());
                 /*
                 g.print();*/
     }
