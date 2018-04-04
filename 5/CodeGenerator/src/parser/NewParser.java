@@ -7,12 +7,15 @@ import Translate.Frag;
 import Translate.ProcFrag;
 import Translate.Translate;
 import Mips.MipsFrame;
+import Mips.SpimCodegen;
 import Mips.Codegen;
 import Canon.TraceSchedule;
 import Canon.BasicBlocks;
 import Canon.Canon;
 import Tree.StmList;
 import IR_visitor.GenCVisitor;
+import IR_visitor.TempVisitor;
+
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Vector;
@@ -23,14 +26,18 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import Assem.Instr;
 import Assem.InstrList;
+import Assem.LABEL;
 
 public class NewParser implements NewParserConstants {
   public static void main(String[] args) throws FileNotFoundException {
         try{
-        		//String inputFile = "/home/maryam/7054/5/generator_tests/quicksort.java";
+        		boolean temp_names = true;
+        		String inputFile = "/home/maryam/7054/5/generator_tests/and.java"; //simpleFunc.java";//just_main.java";//just_main.java";
         		
-                File f = new File(args[0]);//inputFile); ///args[0]);//
+                File f = new File(inputFile); //args[0]);///args[0]);//
                // String fName = f.getName();
                 InputStream in = new FileInputStream(f);
                 Program root = new NewParser(in).Goal(); //new NewParser(System.in).Goal(); //
@@ -45,7 +52,14 @@ public class NewParser implements NewParserConstants {
                 
                 Frag frag = ir.getResults();
                 //GenCVisitor g = new GenCVisitor();
-                Codegen gen = new Codegen(new MipsFrame());
+                TempVisitor gen;
+                if(temp_names) {
+                	gen = new Codegen(new MipsFrame());
+                }
+                else {
+                	gen = new SpimCodegen(new MipsFrame());
+                }
+                int i = 0;
                 while(frag != null)
                 {
                 	ProcFrag pf = (ProcFrag) frag;
@@ -59,17 +73,29 @@ public class NewParser implements NewParserConstants {
             		g.codegen(pf,  t.stms);*/
 
             		// Generate Assembly Code
-            		Tree.StmList stms = t.stms;
-            		while(stms.head != null) {
-            			InstrList instrLst = gen.codegen(t.stms.head);
-            			stms = t.stms.tail;
-            			System.out.println(instrLst);
+            		if(i == 0) {
+            			Instr tempInstr = new LABEL("main:\n", new Temp.Label("main"));
+            			System.out.println(tempInstr.format(new Temp.RegMap())); //.DefaultMap()));
+            			i = i + 1;
             		}
-            		
-            		
-            		
+            		gen.prologue();
+            		Tree.StmList stms = t.stms;
+            		while(stms != null) {
+            			InstrList instrLst = gen.codegen(stms.head);
+ 
+            			InstrList inss = instrLst;
+            			//Instr ins = inss.head;
+            			while(inss != null) {
+            				System.out.println(inss.head.format(new Temp.DefaultMap()));
+            				inss = inss.tail;
+            				//ins = inss != null ? inss.head : null;
+            			}
+               			stms = stms.tail;
+            		}
+            		gen.epilogue();
             		frag = frag.next;
                 }
+                System.out.println("j _finish");
                 /*
                 g.print();*/
     }

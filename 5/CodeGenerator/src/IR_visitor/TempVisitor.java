@@ -30,4 +30,10 @@ public interface TempVisitor
   public Temp visit(CONST n);
 
   public Temp visit(CALL n);
+  
+  public void prologue();
+  
+  public void epilogue();
+  
+  public Assem.InstrList codegen(Stm n); 
 }
