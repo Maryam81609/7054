@@ -149,16 +149,16 @@ public class SpimCodegen implements TempVisitor
 	  Temp.TempList dstList = new Temp.TempList(r1, null);
 	  switch(n.binop) {
 	  case Tree.BINOP.PLUS:	
-		  if(n.left instanceof Tree.CONST && n.right instanceof Tree.CONST) {
+		  /*if(n.left instanceof Tree.CONST && n.right instanceof Tree.CONST) {
 			  emit(new OPER("\taddi $t2, " + ((Tree.CONST)n.left).value + ", " + ((Tree.CONST)n.right).value, 
 					  dstList, null));
 			  emit(new OPER("\tsw $t2, " + dstOffset + "($fp)", null, null));
-		  }
-		  else if(n.left instanceof Tree.CONST) {
+		  }*/
+		  if(n.left instanceof Tree.CONST) {
 			  Temp.Temp r2 = n.right.accept(this);
 			  int srcOffset = getOffset(r2.toString());
 			  emit(new OPER("\tlw $t0, " + srcOffset + "($fp)", null, null));
-			  emit(new OPER("\taddi $t2, " + ((Tree.CONST)n.left).value + ", $t0", 
+			  emit(new OPER("\taddi $t2, $t0, " + ((Tree.CONST)n.left).value, 
 					  dstList, new Temp.TempList(r2, null)));
 			  emit(new OPER("\tsw $t2, " + dstOffset + "($fp)", null, null));
 		  }
@@ -183,12 +183,12 @@ public class SpimCodegen implements TempVisitor
 		  }
 		  break;
 	  case Tree.BINOP.MINUS:
-		  if(n.left instanceof Tree.CONST && n.right instanceof Tree.CONST) {
+		 /* if(n.left instanceof Tree.CONST && n.right instanceof Tree.CONST) {
 			  emit(new OPER("\taddi $t2, " + ((Tree.CONST)n.left).value + ", " + (-1 * ((Tree.CONST)n.right).value) , 
 					  dstList, null));
 			  emit(new OPER("\tsw $t2, " + dstOffset + "($fp)", null, null));
-		  }
-		  else if(n.right instanceof Tree.CONST) {
+		  }*/
+		  if(n.right instanceof Tree.CONST) {
 			  Temp.Temp r2 = n.left.accept(this);
 			  int srcOffset = getOffset(r2.toString());
 			  emit(new OPER("\tlw $t0, " + srcOffset + "($fp)", null, null));
@@ -219,16 +219,16 @@ public class SpimCodegen implements TempVisitor
 		  emit(new OPER("\tsw $t2, " + dstOffset + "($fp)", null, null));
 		  break;
 	  case Tree.BINOP.AND:
-		  if(n.left instanceof Tree.CONST && n.right instanceof Tree.CONST) {
+		  /*if(n.left instanceof Tree.CONST && n.right instanceof Tree.CONST) {
 			  emit(new OPER("\tandi $t2, " + ((Tree.CONST)n.left).value + ", " + ((Tree.CONST)n.right).value , 
 					  dstList, null));
 			  emit(new OPER("\tsw $t2, " + dstOffset + "($fp)", null, null));
-		  }
-		  else if(n.left instanceof Tree.CONST) {
+		  }*/
+		  if(n.left instanceof Tree.CONST) {
 			  Temp.Temp r2 = n.right.accept(this);
 			  int srcOffset2 = getOffset(r2.toString());
 			  emit(new OPER("\tlw $t0, " + srcOffset2 + "($fp)", null, null));
-			  emit(new OPER("\tandi $t2, " + ((Tree.CONST)n.left).value + ", $t0", 
+			  emit(new OPER("\tandi $t2, $t0, " + ((Tree.CONST)n.left).value, 
 					  dstList, new Temp.TempList(r2, null)));
 			  emit(new OPER("\tsw $t2, " + dstOffset + "($fp)", null, null));
 		  }
