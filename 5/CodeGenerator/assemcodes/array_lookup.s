@@ -47,7 +47,7 @@ L6:
 	addi $t2, $0, 1
 	sw $t2, -24($fp)
 	lw $t0, -24($fp)
-	addi $t2, t0, 1
+	addi $t2, $t0, 1
 	sw $t2, -20($fp)
 	addi $t2, $0, 4
 	sw $t2, -28($fp)
@@ -84,7 +84,7 @@ L2:
 	addi $t2, $0, 1
 	sw $t2, -72($fp)
 	lw $t0, -72($fp)
-	addi $t2, t0, 0
+	addi $t2, $t0, 0
 	sw $t2, -68($fp)
 	addi $t2, $0, 4
 	sw $t2, -76($fp)
