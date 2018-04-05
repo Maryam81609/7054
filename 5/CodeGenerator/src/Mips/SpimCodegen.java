@@ -51,10 +51,7 @@ public class SpimCodegen implements TempVisitor
 
   public void visit(Tree.LABEL n)
   {
-	  //if  (n.label.toString() != "main") {
-		  emit(new LABEL(n.label.toString() + ":\n", n.label));
-	  //}
-    
+	  emit(new LABEL(n.label.toString() + ":\n", n.label));
   }
 
   public void visit(Tree.JUMP n)
@@ -297,7 +294,7 @@ public class SpimCodegen implements TempVisitor
 
   public Temp.Temp visit(Tree.CONST n)
   {
-	  // TEST DONE: fill in
+	  // TEST DONE: fill in 
 	  Temp.Temp t = new Temp.Temp();
 	  int dstOffset = getOffset(t.toString());  
 	  emit(new Assem.OPER("\taddi $t2, $0, " + n.value , new Temp.TempList(t, null), new Temp.TempList(MipsFrame.ZERO, null)));
@@ -351,22 +348,9 @@ public class SpimCodegen implements TempVisitor
 	  Temp.Label fl = ((Tree.NAME)n.func).label;
 	  emit(new OPER("\tjal `j0", null, null, new Temp.LabelList(fl, null)));
 	  
-	  Temp.Temp retValTemp = new Temp.Temp();
+	  Temp.Temp retValTemp = frame.RV();
 	  int retValTempOffset = getOffset(retValTemp.toString());
 	  emit(new OPER("\tsw $v0, " + retValTempOffset + "($fp)", null, null));
-	  
-	  /*Temp.Temp ra = new Temp.Temp();
-	  Instr tempInstr= new OPER("\tlw `d0, 0(`s0)", new Temp.TempList(ra, null), 
-			  new Temp.TempList(frame.FP(), null)); 
-	  emit(tempInstr);
-	  //System.out.println(tempInstr.format(new Temp.RegMap(frame)));
-
-	  tempInstr = new MOVE("\tmove `d0, `s0", MipsFrame.RA, ra);
-	  emit(tempInstr);
-	  //System.out.println(tempInstr.format(new Temp.RegMap(frame)));
-	  tempInstr = new OPER("\tjr `s0", null, new Temp.TempList(MipsFrame.RA, null));
-	  emit(tempInstr);
-	  //System.out.println(tempInstr.format(new Temp.RegMap(frame)));*/
 	  
 	  return frame.RV();
   }
