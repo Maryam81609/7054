@@ -661,30 +661,36 @@ public class Translate implements ExpVisitor
     /* DONE CODE 
      (Note: you will need to get the number of field variables from your
      symbol table)  -- don't return null */
+	  Tree.Exp retExp;
 	  
 	  symbol.ClassTable objClass = symTbl.getClass(n.i.s);
 	  int fldCnt = objClass.varCount();
-	  int wordSize = currFrame.wordSize();
-	  int allocSize = fldCnt * wordSize;
-	 
-	  //allocate memory and get the address
-	  Tree.ExpList exFunArgs = new Tree.ExpList(new Tree.CONST(allocSize), null);
-	  Tree.Exp objAllocExp  = currFrame.externalCall("alloc", exFunArgs);
-	  Tree.Exp objBaseAdd = new Tree.TEMP(currFrame.RV());
-	  
-	  Tree.Exp objectPtr = (currFrame.allocLocal(false)).exp(new Tree.TEMP(currFrame.FP()));
-	  Tree.Stm saveObjectPtr = new Tree.MOVE(objectPtr, objBaseAdd);
-	  
-	  Tree.Stm retSEQ = new Tree.SEQ(new Ex(objAllocExp).unNx(), saveObjectPtr);
-	  
-	  for(int i = 0; i < fldCnt; i++) {
-		  Tree.Exp offset = new Tree.CONST(i * wordSize);
-		  Tree.Exp dest = new Tree.BINOP(Tree.BINOP.PLUS, objBaseAdd, offset);
-		  Tree.Stm init_i = new Tree.MOVE(new Tree.MEM(dest), new Tree.CONST(0));
-		  retSEQ = new Tree.SEQ(retSEQ, init_i);
+	  if(fldCnt != 0) {
+		  int wordSize = currFrame.wordSize();
+		  int allocSize = fldCnt * wordSize;
+		 
+		  //allocate memory and get the address
+		  Tree.ExpList exFunArgs = new Tree.ExpList(new Tree.CONST(allocSize), null);
+		  Tree.Exp objAllocExp  = currFrame.externalCall("alloc", exFunArgs);
+		  Tree.Exp objBaseAdd = new Tree.TEMP(currFrame.RV());
+		  
+		  Tree.Exp objectPtr = (currFrame.allocLocal(false)).exp(new Tree.TEMP(currFrame.FP()));
+		  Tree.Stm saveObjectPtr = new Tree.MOVE(objectPtr, objBaseAdd);
+		  
+		  Tree.Stm retSEQ = new Tree.SEQ(new Ex(objAllocExp).unNx(), saveObjectPtr);
+		  
+		  for(int i = 0; i < fldCnt; i++) {
+			  Tree.Exp offset = new Tree.CONST(i * wordSize);
+			  Tree.Exp dest = new Tree.BINOP(Tree.BINOP.PLUS, objBaseAdd, offset);
+			  Tree.Stm init_i = new Tree.MOVE(new Tree.MEM(dest), new Tree.CONST(0));
+			  retSEQ = new Tree.SEQ(retSEQ, init_i);
+		  }
+		  
+		  retExp = new Tree.ESEQ(retSEQ, objectPtr);
 	  }
-	  
-	  Tree.Exp retExp = new Tree.ESEQ(retSEQ, objectPtr);
+	  else {
+		  retExp = new Tree.CONST(0);
+	  }
 	  return new Ex(retExp);
   }
 
