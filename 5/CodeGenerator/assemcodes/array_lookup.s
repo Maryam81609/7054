@@ -44,85 +44,91 @@ L6:
 	lw $t0, -12($fp)
 	move $t2, $t0
 	sw $t2, -8($fp)
-	addi $t2, 1, 1
+	addi $t2, $0, 1
+	sw $t2, -24($fp)
+	lw $t0, -24($fp)
+	addi $t2, 1, $t0
 	sw $t2, -20($fp)
 	addi $t2, $0, 4
-	sw $t2, -24($fp)
+	sw $t2, -28($fp)
 	lw $t0, -20($fp)
-	lw $t1, -24($fp)
+	lw $t1, -28($fp)
 	mul $t2, $t0, $t1
 	sw $t2, -16($fp)
 	lw $t0, -16($fp)
 	move $a0, $t0
 	jal _alloc
-	sw $v0, -28($fp)
-	lw $t0, -28($fp)
+	sw $v0, -32($fp)
+	lw $t0, -32($fp)
 	move $t2, $t0
-	sw $t2, -32($fp)
-	lw $t0, -28($fp)
+	sw $t2, -36($fp)
+	lw $t0, -32($fp)
 	lw $t2, 0($t0)
-	sw $t2, -36($fp)
-	li $t2, 1
-	sw $t2, -36($fp)
+	sw $t2, -40($fp)
 	li $t2, 1
 	sw $t2, -40($fp)
+	li $t2, 1
+	sw $t2, -44($fp)
 L0:
 
 	addi $t2, $0, 0
-	sw $t2, -44($fp)
-	lw $t0, -44($fp)
-	lw $t1, -40($fp)
+	sw $t2, -48($fp)
+	lw $t0, -48($fp)
+	lw $t1, -44($fp)
 	blt $t0, $t1, L1
 L2:
 
-	lw $t0, -32($fp)
+	lw $t0, -36($fp)
 	move $t2, $t0
-	sw $t2, -48($fp)
-	addi $t2, 0, 1
-	sw $t2, -64($fp)
-	addi $t2, $0, 4
+	sw $t2, -52($fp)
+	addi $t2, $0, 1
+	sw $t2, -72($fp)
+	lw $t0, -72($fp)
+	addi $t2, 0, $t0
 	sw $t2, -68($fp)
-	lw $t0, -64($fp)
-	lw $t1, -68($fp)
+	addi $t2, $0, 4
+	sw $t2, -76($fp)
+	lw $t0, -68($fp)
+	lw $t1, -76($fp)
 	mul $t2, $t0, $t1
-	sw $t2, -60($fp)
-	lw $t0, -48($fp)
-	lw $t1, -60($fp)
+	sw $t2, -64($fp)
+	lw $t0, -52($fp)
+	lw $t1, -64($fp)
 	add $t2, $t0, $t1
+	sw $t2, -60($fp)
+	lw $t0, -60($fp)
+	lw $t2, 0($t0)
 	sw $t2, -56($fp)
 	lw $t0, -56($fp)
-	lw $t2, 0($t0)
-	sw $t2, -52($fp)
-	lw $t0, -52($fp)
 	move $a0, $t0
 	jal _printInt
-	sw $v0, -28($fp)
+	sw $v0, -32($fp)
 	li $t2, 1
-	sw $t2, -28($fp)
+	sw $t2, -32($fp)
 	j L5
 L1:
 
 	addi $t2, $0, 4
-	sw $t2, -84($fp)
-	lw $t0, -40($fp)
-	lw $t1, -84($fp)
+	sw $t2, -92($fp)
+	lw $t0, -44($fp)
+	lw $t1, -92($fp)
 	mul $t2, $t0, $t1
-	sw $t2, -80($fp)
-	lw $t0, -28($fp)
-	lw $t1, -80($fp)
-	add $t2, $t0, $t1
-	sw $t2, -76($fp)
-	lw $t0, -76($fp)
-	lw $t2, 0($t0)
-	sw $t2, -72($fp)
-	li $t2, 0
-	sw $t2, -72($fp)
-	lw $t0, -40($fp)
-	addi $t2, $t0, -1
 	sw $t2, -88($fp)
-	lw $t0, -88($fp)
+	lw $t0, -32($fp)
+	lw $t1, -88($fp)
+	add $t2, $t0, $t1
+	sw $t2, -84($fp)
+	lw $t0, -84($fp)
+	lw $t2, 0($t0)
+	sw $t2, -80($fp)
+	li $t2, 0
+	sw $t2, -80($fp)
+	lw $t0, -44($fp)
+	addi $t2, $t0, -1
+	sw $t2, -96($fp)
+	lw $t0, -96($fp)
 	move $t2, $t0
-	sw $t2, -40($fp)
+	sw $t2, -44($fp)
 	j L0
 L5:
 
@@ -159,3 +165,6 @@ _alloc:
 _finish:
 	li $v0, 10     # load exit code
 	syscall        # end execution
+
+
+
