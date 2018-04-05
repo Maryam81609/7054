@@ -65,10 +65,11 @@ public class SpimCodegen implements TempVisitor
 		  emit(new OPER("\tj `j0", null, null, new Temp.LabelList(l, null)));
 	  }
 	  else {
-		  Temp.Temp r1 = n.exp.accept(this);
+		  throw new Error("Jump to no name or label.");
+		  /*Temp.Temp r1 = n.exp.accept(this);
 		  int jrOffset = getOffset(r1.toString());
 		  emit(new OPER("\tlw $t2, " + jrOffset + "($fp)", null, null));
-		  emit(new OPER("\tjr $t2", new Temp.TempList(r1, null), null));
+		  emit(new OPER("\tjr $t2", new Temp.TempList(r1, null), null));*/
 	  }
   }
 
@@ -350,8 +351,9 @@ public class SpimCodegen implements TempVisitor
 	  Temp.Label fl = ((Tree.NAME)n.func).label;
 	  emit(new OPER("\tjal `j0", null, null, new Temp.LabelList(fl, null)));
 	  
-	  int v0Offset = getOffset(MipsFrame.V0.toString());
-	  emit(new OPER("\tsw $v0, " + v0Offset + "($fp)", null, null));
+	  Temp.Temp retValTemp = new Temp.Temp();
+	  int retValTempOffset = getOffset(retValTemp.toString());
+	  emit(new OPER("\tsw $v0, " + retValTempOffset + "($fp)", null, null));
 	  
 	  /*Temp.Temp ra = new Temp.Temp();
 	  Instr tempInstr= new OPER("\tlw `d0, 0(`s0)", new Temp.TempList(ra, null), 
