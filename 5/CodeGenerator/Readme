@@ -1,0 +1,17 @@
+To generate the assembly code for the input file do the following:
+
+- Change your working directory to CodeGenerator
+
+# Compile all files, options in [] are optional
+- ant [build] 
+
+
+# Run generator for a given input file
+- ant run -Dargs=PATH_RELATIVE_TO_BIN/INPUT_FILE
+
+# Example
+- assume CodeGenrator and generator_tests are in the same directory
+- current working directory is CodeGenrator
+- run the command
+    * ant run -Dargs="../../generator_tests/if.java"
+

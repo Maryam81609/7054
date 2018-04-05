@@ -35,9 +35,9 @@ public class NewParser implements NewParserConstants {
   public static void main(String[] args) throws FileNotFoundException {
         try{
         		boolean temp_names = false;
-        		String inputFile = "/home/maryam/7054/5/generator_tests/just_main.java";//and.java"; // //simpleFunc.java";//
+        		//String inputFile = "/home/maryam/7054/5/generator_tests/if.java";//just_main.java";//and.java"; //simpleFunc.java";// //
         		
-                File f = new File(inputFile); //args[0]);///args[0]);//
+                File f = new File(args[0]);//inputFile); //
                // String fName = f.getName();
                 InputStream in = new FileInputStream(f);
                 Program root = new NewParser(in).Goal(); //new NewParser(System.in).Goal(); //
@@ -55,16 +55,10 @@ public class NewParser implements NewParserConstants {
                 //GenCVisitor g = new GenCVisitor();
                 TempVisitor gen;
                 Temp.TempMap map;
-                MipsFrame frame = new MipsFrame();
-                if(temp_names) {
-                	gen = new Codegen(frame);
-                	map = new Temp.DefaultMap();
+                MipsFrame frame;
+                if(frag != null) {
+                	System.out.print("\t.text\n" + "\t.globl main\n");
                 }
-                else {
-                	gen = new SpimCodegen(frame);
-                	map = new Temp.RegMap(frame);
-                }
-                int i = 0;
                 while(frag != null)
                 {
                 	ProcFrag pf = (ProcFrag) frag;
@@ -78,12 +72,16 @@ public class NewParser implements NewParserConstants {
             		g.codegen(pf,  t.stms);*/
 
             		// Generate Assembly Code
-            		if(i == 0) {
-            			System.out.print("\t.text\n" + "\t.globl main\n");
-            			Instr tempInstr = new LABEL("main:\n", new Temp.Label("main"));
-            			System.out.println(tempInstr.format(map)); //.DefaultMap()));
-            			i = i + 1;
-            		}
+            		frame = (MipsFrame)pf.frame;
+            		if(temp_names) {
+                    	gen = new Codegen(frame);
+                    	map = new Temp.DefaultMap();
+                    }
+                    else {
+                    	gen = new SpimCodegen(frame);
+                    	map = new Temp.RegMap(frame);
+                    }
+            		
             		gen.prologue();
             		Tree.StmList stms = t.stms;
             		while(stms != null) {
@@ -101,8 +99,7 @@ public class NewParser implements NewParserConstants {
             		gen.epilogue();
             		frag = frag.next;
                 }
-                System.out.println("\tj _finish");
-                System.out.println("\n # MiniJava Library\n" + frame.mjLibrary());
+                System.out.println("\n # MiniJava Library\n" + (new MipsFrame()).mjLibrary());
                 /*
                 g.print();*/
     }
