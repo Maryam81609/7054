@@ -13,6 +13,7 @@ import java.util.HashMap;
 public class SpimCodegen implements TempVisitor
 {
 
+  private final int frameSize = 1600;
   private int offset = -136;
   private HashMap<String, Integer> tempOffset;
   private InstrList codeList, listTail;
@@ -100,13 +101,29 @@ public class SpimCodegen implements TempVisitor
   public void visit(Tree.MOVE n)
   {
 	  // TEST DONE: fill in
-	  Temp.Temp r1 = n.dst.accept(this); 
-	  int dstOffset = getOffset(r1.toString());
 	  
 	  if(n.dst instanceof Tree.TEMP) {
-		  if(n.src instanceof Tree.CONST) { 
+		  Temp.Temp r1 = n.dst.accept(this); 
+		  int dstOffset = getOffset(r1.toString());
+		  if(((Tree.TEMP)n.dst).temp == frame.RV()) {
+			  Temp.Temp r2 = n.src.accept(this);
+			  int srcOffset = getOffset(r2.toString());
+			  
+			  emit(new OPER("\tlw $v0, " + srcOffset + "($fp)", null, null));
+			  /*emit(new MOVE("\tmove $t2, $t0", r1, r2));
+			  emit(new OPER("\tsw $t2, " + dstOffset + "($fp)", null, null));//, r1, r2));*/
+		  }
+		  else if(n.src instanceof Tree.CONST) { 
 			  emit(new OPER("\tli $t2, " + ((Tree.CONST)n.src).value, new Temp.TempList(r1, null), null));
 			  emit(new OPER("\tsw $t2, " + dstOffset + "($fp)", new Temp.TempList(r1, null), null));
+		  }
+
+		  else if(n.src instanceof Tree.MEM) {
+			  Temp.Temp src = n.src.accept(this);
+			  int srcOffset = getOffset(src.toString());
+			  emit(new OPER("\tlw $t0, " + srcOffset + "($fp)", null, null));
+			  emit(new MOVE("\tmove $t2, $t0", r1, src));
+			  emit(new OPER("\tsw $t2, " + dstOffset + "($fp)", null, null));
 		  }
 		  else {
 			  // if function call, then r2 is the return value of the function
@@ -119,17 +136,20 @@ public class SpimCodegen implements TempVisitor
 		  }
 	  }
 	  else if(n.dst instanceof Tree.MEM) {
+		  Temp.Temp dstAddr = ((Tree.MEM)n.dst).exp.accept(this);
+		  int dstAddrOffset = getOffset(dstAddr.toString());
+		  emit(new OPER("\tlw $t2, " + dstAddrOffset + "($fp)", null, null));
 		  if(n.src instanceof Tree.CONST) {
-			  emit(new OPER("\tli $t2, " + ((Tree.CONST)n.src).value, null, null));
-			  emit(new OPER("\tsw $t2, " + dstOffset + "($fp)", new Temp.TempList(r1, null), null));
+			  emit(new OPER("\tli $t0, " + ((Tree.CONST)n.src).value, null, null));
+			  emit(new OPER("\tsw $t0, 0($t2)", null, null));//new Temp.TempList(r1, null), null));
 			  //emit(new OPER("\tsw " + ((Tree.CONST)n.src).value + ", `d0", new Temp.TempList(r1, null), null));
 		  }
 		  else {
 			  Temp.Temp r2 = n.src.accept(this);
 			  int srcOffset = getOffset(r2.toString());
 			  emit(new OPER("\tlw $t0, " + srcOffset + "($fp)", null, null));
-			  emit(new MOVE("\tmove $t2, $t0", r1, r2));  
-			  emit(new OPER("\tsw $t2, " + dstOffset + "($fp)", null, null));
+			  //emit(new MOVE("\tmove $t2, $t0", null, null));  
+			  emit(new OPER("\tsw $t0, 0($t2)", null, null));
 		  }
 	  }  
   }
@@ -306,7 +326,7 @@ public class SpimCodegen implements TempVisitor
   {
     // TEST DONE: fill in
 	  
-	  Tree.ExpList args = reverse(n.args);	  
+	  Tree.ExpList args = n.args;//reverse(n.args);	  
 	  int i = 0;
 	  while(args != null && i < 4) {
 		  switch(i) {
@@ -350,20 +370,20 @@ public class SpimCodegen implements TempVisitor
 	  
 	  Temp.Temp retValTemp = frame.RV();
 	  int retValTempOffset = getOffset(retValTemp.toString());
+	  //emit(new MOVE("\tmove $v0, `s0", null, frame.RV()));
 	  emit(new OPER("\tsw $v0, " + retValTempOffset + "($fp)", null, null));
 	  
-	  return frame.RV();
+	  return retValTemp;//frame.RV();
   }
 
   public void prologue() {
 	  System.out.println(frame.name.toString() + ":");
-	  //Instr tempInstr = new MOVE("\tmove `d0, `s0",frame.FP(), MipsFrame.SP);
 	  Instr tempInstr = new MOVE("\tmove $fp, $sp",frame.FP(), MipsFrame.SP);
 	  System.out.println(tempInstr.format(new Temp.RegMap(frame)));
 	  
 	  Temp.Temp r2 = new Temp.Temp();
 	  //int r2Offset = getOffset(r2.toString());
-	  tempInstr = new OPER("\taddi $t2, $0, " + 800 , 
+	  tempInstr = new OPER("\taddi $t2, $0, " + frameSize , 
 			  new Temp.TempList(r2, null), new Temp.TempList(MipsFrame.ZERO, null));
 	  System.out.println(tempInstr.format(new Temp.RegMap(frame))); 
 	  
@@ -374,20 +394,39 @@ public class SpimCodegen implements TempVisitor
 	  tempInstr = new OPER("\tsw $ra, 0($fp)", new Temp.TempList(frame.FP(), null), 
 			  new Temp.TempList(MipsFrame.RA, null));
 	  System.out.println(tempInstr.format(new Temp.RegMap(frame)));
+	  
+	  if(frame.name.toString() != "main") {
+		  int formalsCount = getCounts(frame.formals); 
+		  for(int i = formalsCount-1; i >= 0; i--) {
+			  switch(i) {
+			  case 3:
+				  int a3Offset = getOffset(MipsFrame.A3.toString());
+				  tempInstr = new OPER("\tsw $a3, " + a3Offset + "($fp)", null, null);
+				  System.out.println(tempInstr.format(new Temp.RegMap(frame)));
+				  break;
+			  case 2:
+				  int a2Offset = getOffset(MipsFrame.A2.toString());
+				  tempInstr = new OPER("\tsw $a2, " + a2Offset + "($fp)", null, null);
+				  System.out.println(tempInstr.format(new Temp.RegMap(frame)));
+				  break;
+			  case 1:
+				  int a1Offset = getOffset(MipsFrame.A1.toString());
+				  tempInstr = new OPER("\tsw $a1, " + a1Offset + "($fp)", null, null);
+				  System.out.println(tempInstr.format(new Temp.RegMap(frame)));
+				  break;
+			  case 0:
+				  int a0Offset = getOffset(MipsFrame.A0.toString());
+				  tempInstr = new OPER("\tsw $a0, " + a0Offset + "($fp)", null, null);
+				  System.out.println(tempInstr.format(new Temp.RegMap(frame)));
+				  break;
+			  }  
+		  }	
+	  }
   }
   
   public void epilogue() {
 	  //Temp.Temp r = new Temp.Temp();
 	  Temp.TempMap map = new Temp.RegMap(frame);
-	  
-	  /*= new OPER("lw `d0, 0(`s0)", new Temp.TempList(ra, null), 
-			  new Temp.TempList(frame.FP(), null)); 
-	  System.out.println(tempInstr.format(new Temp.RegMap(frame)));
-	  
-	  tempInstr = new MOVE("move `d0, `s0", MipsFrame.RA, ra);
-	  System.out.println(tempInstr.format(new Temp.RegMap(frame)));
-	  tempInstr = new OPER("jr `s0", null, new Temp.TempList(MipsFrame.RA, null));
-	  System.out.println(tempInstr.format(new Temp.RegMap(frame)));*/
 	  
 	  Instr tempInstr = new OPER("\tlw $t0, 0($fp)", null, null);
 	  System.out.println(tempInstr.format(map));
@@ -397,7 +436,7 @@ public class SpimCodegen implements TempVisitor
 	  tempInstr = new MOVE("\tmove `d0, `s0", MipsFrame.SP, frame.FP());
 	  System.out.println(tempInstr.format(map));
 	  
-	  tempInstr = new OPER("\taddi `d0, `s0, " + 800, new Temp.TempList(frame.FP(), null), 
+	  tempInstr = new OPER("\taddi `d0, `s0, " + frameSize, new Temp.TempList(frame.FP(), null), 
 			  new Temp.TempList(frame.FP(), null));
 	  System.out.println(tempInstr.format(map));
 	  
@@ -409,6 +448,16 @@ public class SpimCodegen implements TempVisitor
 	  }
   }
   
+  public int getCounts(Frame.AccessList formals) {
+	  int count = 0;
+	  Frame.AccessList args = formals;
+	  while(args != null) {
+		  count += 1;
+		  args = args.tail;
+	  }
+	  
+	  return count;
+  }
   public Tree.ExpList reverse(Tree.ExpList args_in) {
 	  Tree.ExpList args_out = null;
 	  while (args_in != null) {
