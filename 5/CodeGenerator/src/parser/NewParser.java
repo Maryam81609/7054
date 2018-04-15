@@ -35,7 +35,7 @@ public class NewParser implements NewParserConstants {
   public static void main(String[] args) throws FileNotFoundException {
         try{
         		boolean temp_names = false;
-        		//String inputFile = "/home/maryam/7054/5/generator_tests/if.java";//just_main.java";//and.java"; //simpleFunc.java";// //
+        		//String inputFile = "/home/maryam/7054/5/generator_tests/args.java";//array_lookup.java";//just_main.java";//and.java"; //simpleFunc.java";// //
         		
                 File f = new File(args[0]);//inputFile); //
                // String fName = f.getName();
@@ -53,6 +53,8 @@ public class NewParser implements NewParserConstants {
                 
                 Frag frag = ir.getResults();
                 //GenCVisitor g = new GenCVisitor();
+                
+                // CodeGenerator
                 TempVisitor gen;
                 Temp.TempMap map;
                 MipsFrame frame;

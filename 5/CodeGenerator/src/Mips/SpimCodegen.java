@@ -138,8 +138,8 @@ public class SpimCodegen implements TempVisitor
 	  else if(n.dst instanceof Tree.MEM) {
 		  Temp.Temp dstAddr = ((Tree.MEM)n.dst).exp.accept(this);
 		  int dstAddrOffset = getOffset(dstAddr.toString());
-		  emit(new OPER("\tlw $t2, " + dstAddrOffset + "($fp)", null, null));
 		  if(n.src instanceof Tree.CONST) {
+			  emit(new OPER("\tlw $t2, " + dstAddrOffset + "($fp)", null, null));
 			  emit(new OPER("\tli $t0, " + ((Tree.CONST)n.src).value, null, null));
 			  emit(new OPER("\tsw $t0, 0($t2)", null, null));//new Temp.TempList(r1, null), null));
 			  //emit(new OPER("\tsw " + ((Tree.CONST)n.src).value + ", `d0", new Temp.TempList(r1, null), null));
@@ -148,10 +148,13 @@ public class SpimCodegen implements TempVisitor
 			  Temp.Temp r2 = n.src.accept(this);
 			  int srcOffset = getOffset(r2.toString());
 			  emit(new OPER("\tlw $t0, " + srcOffset + "($fp)", null, null));
-			  //emit(new MOVE("\tmove $t2, $t0", null, null));  
+			  emit(new OPER("\tlw $t2, " + dstAddrOffset + "($fp)", null, null)); 
 			  emit(new OPER("\tsw $t0, 0($t2)", null, null));
 		  }
-	  }  
+	  }
+	  else {
+		 throw new Error("destination is other than MEM or TEMP: " + n.dst.toString());
+	  }
   }
 
   public void visit(Tree.EXP1 n)
@@ -182,8 +185,13 @@ public class SpimCodegen implements TempVisitor
 		  }
 		  else if(n.right instanceof Tree.CONST) {
 			  Temp.Temp r2 = n.left.accept(this);
-			  int srcOffset = getOffset(r2.toString());
-			  emit(new OPER("\tlw $t0, " + srcOffset + "($fp)", null, null));
+			  if(r2 == MipsFrame.S8) {
+				  emit(new OPER("\tadd $t0, $fp, $0", null, null));
+			  }
+			  else {
+				  int srcOffset = getOffset(r2.toString());
+				  emit(new OPER("\tlw $t0, " + srcOffset + "($fp)", null, null));
+			  }
 			  emit(new OPER("\taddi $t2, $t0, " + ((Tree.CONST)n.right).value , 
 					  dstList, new Temp.TempList(r2, null)));
 			  emit(new OPER("\tsw $t2, " + dstOffset + "($fp)", null, null));
@@ -328,42 +336,60 @@ public class SpimCodegen implements TempVisitor
 	  
 	  Tree.ExpList args = n.args;//reverse(n.args);	  
 	  int i = 0;
-	  while(args != null && i < 4) {
-		  switch(i) {
-		  case 0:
-			  Temp.Temp arg0 = args.head.accept(this);
-			  int arg0Offset = getOffset(arg0.toString());
-			  emit(new OPER("\tlw $t0, " + arg0Offset +"($fp)", null, null));
-			  emit(new MOVE("\tmove $a0, $t0" , MipsFrame.A0, arg0));
+	  while(args != null) {
+		  if(i < 4) {
+			  switch(i) {
+			  case 0:
+				  Temp.Temp arg0 = args.head.accept(this);
+				  int arg0Offset = getOffset(arg0.toString());
+				  emit(new OPER("\tlw $t0, " + arg0Offset +"($fp)", null, null));
+				  emit(new MOVE("\tmove $a0, $t0" , MipsFrame.A0, arg0));
+				  args = args.tail;
+				  i = i + 1;
+				  break;
+			  case 1:
+				  Temp.Temp arg1 = args.head.accept(this);
+				  int arg1Offset = getOffset(arg1.toString());
+				  emit(new OPER("\tlw $t0, " + arg1Offset +"($fp)", null, null));
+				  emit(new MOVE("\tmove $a1, $t0", MipsFrame.A1, arg1));
+				  args = args.tail;
+				  i = i + 1;
+				  break;
+			  case 2:
+				  Temp.Temp arg2 = args.head.accept(this);
+				  int arg2Offset = getOffset(arg2.toString());
+				  emit(new OPER("\tlw $t0, " + arg2Offset +"($fp)", null, null));
+				  emit(new MOVE("\tmove $a2, $t0", MipsFrame.A2, arg2));
+				  args = args.tail;
+				  i = i + 1;
+				  break;
+			  case 3:
+				  Temp.Temp arg3 = args.head.accept(this);
+				  int arg3Offset = getOffset(arg3.toString());
+				  emit(new OPER("\tlw $t0, " + arg3Offset +"($fp)", null, null));
+				  emit(new MOVE("\tmove $a3, $t0", MipsFrame.A3, arg3));
+				  args = args.tail;
+				  i = i + 1;
+				  break;
+			  default: 
+				  break;
+			  }
+		  }
+		  else {
+			  Temp.Temp argi = args.head.accept(this);
+			  int argiOffset = getOffset(argi.toString());
+			  int spOffset = (i - 3) * 4;
+			  emit(new OPER("\tlw $t0, " + argiOffset +"($fp)", null, null));
+			  emit(new OPER("\tsw $t0, " + spOffset + "($sp)", null, null));
 			  args = args.tail;
 			  i = i + 1;
-			  break;
-		  case 1:
-			  Temp.Temp arg1 = args.head.accept(this);
-			  int arg1Offset = getOffset(arg1.toString());
-			  emit(new OPER("\tlw $t0, " + arg1Offset +"($fp)", null, null));
-			  emit(new MOVE("\tmove $a1, $t0", MipsFrame.A1, arg1));
-			  args = args.tail;
-			  i = i + 1;
-			  break;
-		  case 2:
-			  Temp.Temp arg2 = args.head.accept(this);
-			  int arg2Offset = getOffset(arg2.toString());
-			  emit(new OPER("\tlw $t0, " + arg2Offset +"($fp)", null, null));
-			  emit(new MOVE("\tmove $a2, $t0", MipsFrame.A2, arg2));
-			  args = args.tail;
-			  i = i + 1;
-			  break;
-		  case 3:
-			  Temp.Temp arg3 = args.head.accept(this);
-			  int arg3Offset = getOffset(arg3.toString());
-			  emit(new OPER("\tlw $t0, " + arg3Offset +"($fp)", null, null));
-			  emit(new MOVE("\tmove $a3, $t0", MipsFrame.A3, arg3));
-			  args = args.tail;
-			  i = i + 1;
-			  break;
 		  }
 	  }
+	  
+	  //Store rest of the args at $sp + 4, + 8, ...
+	  /*if(args != null) {
+		  Temp.Temp arg = args.head.accept(this);
+	  }*/
 	  
 	  Temp.Label fl = ((Tree.NAME)n.func).label;
 	  emit(new OPER("\tjal `j0", null, null, new Temp.LabelList(fl, null)));
@@ -377,6 +403,15 @@ public class SpimCodegen implements TempVisitor
   }
 
   public void prologue() {
+	  /*
+	   * lw $t0, 12($fp)
+	   * sw $t0, -16($fp)
+	   * addi $t3, $fp, 12
+	   * lw $t3, 0($t3)
+	   * sw $t3, -20($fp)
+	   * 
+	   */
+	  
 	  System.out.println(frame.name.toString() + ":");
 	  Instr tempInstr = new MOVE("\tmove $fp, $sp",frame.FP(), MipsFrame.SP);
 	  System.out.println(tempInstr.format(new Temp.RegMap(frame)));
@@ -397,30 +432,44 @@ public class SpimCodegen implements TempVisitor
 	  
 	  if(frame.name.toString() != "main") {
 		  int formalsCount = getCounts(frame.formals); 
-		  for(int i = formalsCount-1; i >= 0; i--) {
-			  switch(i) {
-			  case 3:
-				  int a3Offset = getOffset(MipsFrame.A3.toString());
-				  tempInstr = new OPER("\tsw $a3, " + a3Offset + "($fp)", null, null);
+		  int i = formalsCount - 1;
+		  
+		  while(i >= 0) {
+			  if(i >= 4) {
+				  int aiOffset = getOffset(new Temp.Temp().toString());
+				  int aiPreOffset = (i - 3) * 4;
+				  //Load Arg From Caller Frame
+				  tempInstr = new OPER("\tlw $t0, " + aiPreOffset + "($fp)", null, null);
 				  System.out.println(tempInstr.format(new Temp.RegMap(frame)));
-				  break;
-			  case 2:
-				  int a2Offset = getOffset(MipsFrame.A2.toString());
-				  tempInstr = new OPER("\tsw $a2, " + a2Offset + "($fp)", null, null);
+				  tempInstr = new OPER("\tsw $t0, " + aiOffset + "($fp)", null, null);
 				  System.out.println(tempInstr.format(new Temp.RegMap(frame)));
-				  break;
-			  case 1:
-				  int a1Offset = getOffset(MipsFrame.A1.toString());
-				  tempInstr = new OPER("\tsw $a1, " + a1Offset + "($fp)", null, null);
-				  System.out.println(tempInstr.format(new Temp.RegMap(frame)));
-				  break;
-			  case 0:
-				  int a0Offset = getOffset(MipsFrame.A0.toString());
-				  tempInstr = new OPER("\tsw $a0, " + a0Offset + "($fp)", null, null);
-				  System.out.println(tempInstr.format(new Temp.RegMap(frame)));
-				  break;
-			  }  
-		  }	
+			  }
+			  else {
+				  switch(i) {
+				  case 3:
+					  int a3Offset = getOffset(MipsFrame.A3.toString());
+					  tempInstr = new OPER("\tsw $a3, " + a3Offset + "($fp)", null, null);
+					  System.out.println(tempInstr.format(new Temp.RegMap(frame)));
+					  break;
+				  case 2:
+					  int a2Offset = getOffset(MipsFrame.A2.toString());
+					  tempInstr = new OPER("\tsw $a2, " + a2Offset + "($fp)", null, null);
+					  System.out.println(tempInstr.format(new Temp.RegMap(frame)));
+					  break;
+				  case 1:
+					  int a1Offset = getOffset(MipsFrame.A1.toString());
+					  tempInstr = new OPER("\tsw $a1, " + a1Offset + "($fp)", null, null);
+					  System.out.println(tempInstr.format(new Temp.RegMap(frame)));
+					  break;
+				  case 0:
+					  int a0Offset = getOffset(MipsFrame.A0.toString());
+					  tempInstr = new OPER("\tsw $a0, " + a0Offset + "($fp)", null, null);
+					  System.out.println(tempInstr.format(new Temp.RegMap(frame)));
+					  break;
+				  }  
+			  }
+			  i = i - 1;
+		  }
 	  }
   }
   
