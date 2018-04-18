@@ -58,7 +58,9 @@ public class LiveAnalysis{
 							dest = g.newNode(varDest);
 						}
 						if(src != dest && (!cfg.isMove(n) || (cfg.isMove(n) && !inList(varDest, n.instr().use())))) { 
-							g.addEdge(src, dest);
+							if(!src.adj(dest)) {
+								g.addEdge(src, dest);
+							}
 						}
 						liveOuts = liveOuts.tail;
 					}
