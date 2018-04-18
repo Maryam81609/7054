@@ -56,5 +56,14 @@ public class Node {
     }
 
     public String toString() {return String.valueOf(mykey);}
+    
+    public boolean equals(Node n) {
+    	// They must have the same graph for this project, because it is being called from liveness that has only one cfg
+    	// so no need to check this.mygraph == n.mygraph && 
+    	if(this.mykey == n.mykey) {
+    		return true;
+    	}
+    	return false;
+    }
 
 }

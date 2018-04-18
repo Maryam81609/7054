@@ -26,6 +26,10 @@ public class CFGGenerator {
 		cfgs.put(frameName, currGraph);
 	} 
 	
+	public CFG getCFG() {
+		return currGraph;
+	}
+	
 	public void createNodes(InstrList instrList) {
 		
 		InstrList il = instrList;		

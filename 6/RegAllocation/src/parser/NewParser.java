@@ -7,6 +7,7 @@ import Translate.Frag;
 import Translate.ProcFrag;
 import Translate.Translate;
 import Mips.MipsFrame;
+import RegAlloc.LiveAnalysis;
 //import Mips.SpimCodegen;
 import Mips.Codegen;
 import Canon.TraceSchedule;
@@ -36,7 +37,7 @@ public class NewParser implements NewParserConstants {
   public static void main(String[] args) throws FileNotFoundException {
         try{
         		//boolean temp_names = false;
-        		String inputFile = "/home/maryam/7054/6/generator_tests/many_args.java";//array_lookup.java";//just_main.java";//and.java"; //simpleFunc.java";// //
+        		String inputFile = "/home/maryam/7054/6/generator_tests/just_main.java";//array_lookup.java";//and.java"; //simpleFunc.java";// //
         		
                 File f = new File(inputFile); //args[0]);//
                // String fName = f.getName();
@@ -80,37 +81,45 @@ public class NewParser implements NewParserConstants {
                 	map = new Temp.RegMap(frame); //Temp.DefaultMap();
             		
                     // Create CFG for the frag
-                    CFGGenerator fragCfg = new CFGGenerator(frame.name.toString());
+                    CFGGenerator fragCfgGen = new CFGGenerator(frame.name.toString());
                     	
             		InstrList proInstrs = gen.prologue();
-            		proInstrs.print(map);
+            		//proInstrs.print(map);
             		// Create CFG Nodes for prologue
-            		fragCfg.createNodes(proInstrs);
+            		fragCfgGen.createNodes(proInstrs);
             		
             		Tree.StmList stms = t.stms;
             		while(stms != null) {
             			InstrList instrLst = gen.codegen(stms.head);
             			if(instrLst != null) {
-            				instrLst.print(map);
+            				//instrLst.print(map);
             			}
             			
             			// Create CFG Nodes for function body
-            			fragCfg.createNodes(instrLst);
+            			fragCfgGen.createNodes(instrLst);
             			
                			stms = stms.tail;
             		}
             		InstrList epiInstrs = gen.epilogue();
-            		epiInstrs.print(map);
+            		//epiInstrs.print(map);
+            		
             		// Create CFG Nodes for epilogue
-            		fragCfg.createNodes(epiInstrs);
+            		fragCfgGen.createNodes(epiInstrs);
+            		
             		// Add CFG Edges for the created nodes
-            		fragCfg.addEdges();
+            		fragCfgGen.addEdges();
+            		
+            		// Create Interference graph here
+            		LiveAnalysis la = new LiveAnalysis(fragCfgGen.getCFG(), frame.name.toString());
+            		
             		frag = frag.next;
                 }
                 System.out.println("\n # MiniJava Library\n" + (new MipsFrame()).mjLibrary());
                 /*
                 g.print();*/
                 CFGGenerator.show(new Temp.RegMap(new MipsFrame()));
+                LiveAnalysis.show(new Temp.RegMap(new MipsFrame()));
+                
     }
     catch(ParseException e){
       System.err.println("SyntaxError: " + e.getMessage());
