@@ -8,6 +8,8 @@ import Translate.ProcFrag;
 import Translate.Translate;
 import Mips.MipsFrame;
 import RegAlloc.LiveAnalysis;
+import RegAlloc.RegisterMap;
+import Temp.RegMap;
 //import Mips.SpimCodegen;
 import Mips.Codegen;
 import Canon.TraceSchedule;
@@ -38,13 +40,10 @@ import FlowGraph.*;
 public class NewParser implements NewParserConstants {
   public static void main(String[] args) throws FileNotFoundException {
         try{
-        		//boolean temp_names = false;
-        		String inputFile = "/home/maryam/7054/6/generator_tests/just_main.java";//array_lookup.java";//and.java"; //simpleFunc.java";// //
-        		
-                File f = new File(inputFile); //args[0]);//
-               // String fName = f.getName();
+        		//String inputFile = "/home/maryam/7054/6/generator_tests/func.java";
+                File f = new File(args[0]);//inputFile); //
                 InputStream in = new FileInputStream(f);
-                Program root = new NewParser(in).Goal(); //new NewParser(System.in).Goal(); //
+                Program root = new NewParser(in).Goal();
                 SymbolTableVisitor symTblVisitor = new SymbolTableVisitor();
                 root.accept(symTblVisitor);
                 SymbolTable symTable = symTblVisitor.getTable();
@@ -53,19 +52,13 @@ public class NewParser implements NewParserConstants {
                 // Satge4: IR Generation
                 MipsFrame fr = new MipsFrame();
                 Translate ir = new Translate(root, fr, symTable);
-                //ir.printResults();
                 
                 Frag frag = ir.getResults();
-                //GenCVisitor g = new GenCVisitor();
                 
                 // CodeGenerator
                 TempVisitor gen;
-                Temp.TempMap map;
                 MipsFrame frame;
                 LinkedHashMap<String, ArrayList<Instr>> assemInstrs = new LinkedHashMap<String, ArrayList<Instr>>();;
-                /*if(frag != null) {
-                	System.out.print("\t.text\n" + "\t.globl main\n");
-                }*/
                 
                 while(frag != null)
                 {
@@ -74,15 +67,10 @@ public class NewParser implements NewParserConstants {
             	
             		// Canonicalize
             		TraceSchedule t = new TraceSchedule(new BasicBlocks(new Canon().linearize(fragBody)));
-            		
-            		/*
-            		// Generate equivalent C code 
-            		g.codegen(pf,  t.stms);*/
-
+            	
             		// Generate Assembly Code
             		frame = (MipsFrame)pf.frame;
                 	gen = new Codegen(frame);
-                	map = new Temp.RegMap(frame); //Temp.DefaultMap();
             		
                     // Create CFG for the frag
                     CFGGenerator fragCfgGen = new CFGGenerator(frame.name.toString());
@@ -91,7 +79,6 @@ public class NewParser implements NewParserConstants {
                     
             		InstrList proInstrs = gen.prologue();
             		fragInstrList.addAll(proInstrs.toList());
-            		//proInstrs.print(map);
             		
             		// Create CFG Nodes for prologue
             		fragCfgGen.createNodes(proInstrs);
@@ -99,10 +86,9 @@ public class NewParser implements NewParserConstants {
             		Tree.StmList stms = t.stms;
             		while(stms != null) {
             			InstrList instrLst = gen.codegen(stms.head);
-            			fragInstrList.addAll(instrLst.toList());
-            			/*if(instrLst != null) {
-            				instrLst.print(map);
-            			}*/
+            			if(instrLst != null) {
+            				fragInstrList.addAll(instrLst.toList());
+            			}
             			
             			// Create CFG Nodes for function body
             			fragCfgGen.createNodes(instrLst);
@@ -111,7 +97,6 @@ public class NewParser implements NewParserConstants {
             		}
             		InstrList epiInstrs = gen.epilogue();
             		fragInstrList.addAll(epiInstrs.toList());
-            		//epiInstrs.print(map);
             		
             		assemInstrs.put(frame.name.toString(), fragInstrList);
             		
@@ -126,14 +111,11 @@ public class NewParser implements NewParserConstants {
             		
             		frag = frag.next;
                 }
-                //System.out.println("\n # MiniJava Library\n" + (new MipsFrame()).mjLibrary());
-                /*
-                g.print();*/
                 //LiveAnalysis.printTempMaps();
                 //CFGGenerator.show(new Temp.RegMap(new MipsFrame()));
                 //LiveAnalysis.show(new Temp.RegMap(new MipsFrame()));
-                
-                LiveAnalysis.print(assemInstrs);
+                //LiveAnalysis.print(assemInstrs, new RegMap(new MipsFrame()));
+                LiveAnalysis.print(assemInstrs, new RegisterMap());
                 
     }
     catch(ParseException e){

@@ -14,7 +14,7 @@ public class LiveAnalysis{
 	
 	private static HashMap<String, HashMap<Temp, String>> tempMaps = null;
 	
-	private final int regNum = 32;
+	private final int regNum = 25;
 	
 	private static HashMap<String, LivenessGraph> livegs;
 	
@@ -33,6 +33,8 @@ public class LiveAnalysis{
 	// A stack maintaining the nodes removed from the graph during the simplification phase
 	private NodeList simplifiedNodes = null;
 	
+	private HashMap<Node, NodeList> removedEdges = null;
+	
 	// Represents which node in the simplifiedNodes stack is a potential spill
 	private HashMap<Node, Boolean> potSpills;
 	
@@ -46,12 +48,23 @@ public class LiveAnalysis{
 		}
 		livegs.put(frameName, liveGraph);
 		
+		initTempMap();
+		
 		color();
 		
 		if(tempMaps == null) {
 			tempMaps = new HashMap<String, HashMap<Temp, String>>();
 		}
 		tempMaps.put(frameName, tempMap);
+	}
+	
+	private void initTempMap() {
+		this.tempMap = new HashMap<>();
+		ArrayList<Temp> reservedRegs = MipsFrame.reservedRegs();
+		MipsFrame f = new MipsFrame();
+		for (Temp temp : reservedRegs) {
+			this.tempMap.put(temp, f.tempMap(temp));
+		}
 	}
 	
 	public static HashMap<Temp, String> getTempMap(String frameName){
@@ -141,7 +154,9 @@ public class LiveAnalysis{
 					if(dest == null) {
 						dest = g.newNode(varDest);
 					}
-					if(src != dest && (!cfg.isMove(n) || (cfg.isMove(n) && !inList(varDest, n.instr().use())))) { 
+					boolean isMove = cfg.isMove(n);
+					boolean d = inList(varDest, n.instr().use());
+					if(src != dest && (!isMove || (isMove && !d))) { 
 						if(!src.adj(dest)) {
 							g.addEdge(src, dest);
 						}
@@ -175,13 +190,14 @@ public class LiveAnalysis{
 		NodeList gsimp_nodes1 = gsimp.nodes();
 		NodeList gsimp_nodes = gsimp_nodes1;
 		inUseRegs = new ArrayList<Temp>();
-		tempMap = new HashMap<Temp, String>();
 		MipsFrame f = new MipsFrame();
 		while(gsimp_nodes != null) {
 			Node m = gsimp_nodes.head;
-			Temp m_temp = gsimp.gtemp(m); 
-			tempMap.put(m_temp, f.tempMap(m_temp));
-			inUseRegs.add(m_temp); 
+			if(gsimp.isPrecolored(m)) {
+				Temp m_temp = gsimp.gtemp(m); 
+				tempMap.put(m_temp, f.tempMap(m_temp));
+				inUseRegs.add(m_temp); 
+			}
 			gsimp_nodes = gsimp_nodes.tail;
 		}
 		select(gsimp);
@@ -192,34 +208,46 @@ public class LiveAnalysis{
 		NodeList stack = simplifiedNodes;
 		while(stack != null) {
 			Node selectedNode = stack.head;
-			if(!colorable(selectedNode, gsimp)) {
+			boolean c = !colorable(selectedNode, gsimp);
+			if(c) {
 				throw new Error("**********SPILL**********");
 			}
-			Temp selectedReg = getaFreeReg();
+			Temp selectedReg = getaFreeReg(selectedNode, gsimp);
 			tempMap.put(gsimp.gtemp(selectedNode), (new MipsFrame()).tempMap(selectedReg));
 			inUseRegs.add(selectedReg);			
 			stack = stack.tail;
 		}		
 	}
 	
-	Temp getaFreeReg() {
+	Temp getaFreeReg(Node node, LivenessGraph ig) {
 		ArrayList<Temp> regs = MipsFrame.availableRegs();
-		regs.removeAll(inUseRegs);
+		
+		NodeList node_adjs = removedEdges.get(node);
+		Set<Temp> usedRegs = new HashSet<Temp>();
+		while(node_adjs != null) {
+			Node adj = node_adjs.head;
+			Temp adjTemp = ig.gtemp(adj);
+			Temp adjReg = MipsFrame.strTemp(tempMap.get(adjTemp));
+			usedRegs.add(adjReg);
+			node_adjs = node_adjs.tail;
+		}
+		ArrayList<Temp> usedRegsList = new ArrayList<>(usedRegs);
+		regs.removeAll(usedRegsList);
 		return regs.get(0);
 	}
 	
 	boolean colorable(Node node, LivenessGraph ig){
-		NodeList node_adjs = node.adj(); 
+		NodeList node_adjs = removedEdges.get(node);//node.adj(); 
 		if(node.len(node_adjs) < regNum) {
 			return true;
 		}
-		Set<String> usedRegs = new HashSet<String>();
+		Set<String> adjRegs = new HashSet<String>();
 		while(node_adjs != null) {
 			Node adj = node_adjs.head;
-			usedRegs.add(tempMap.get(ig.gtemp(adj)));
+			adjRegs.add(tempMap.get(ig.gtemp(adj)));
 			node_adjs = node_adjs.tail;
 		}
-		return (usedRegs.size() < regNum);
+		return (adjRegs.size() < regNum);
 	}
 	
 	/* End: Select */
@@ -267,6 +295,10 @@ public class LiveAnalysis{
 		LivenessGraph gsimp = g;
 		Node n = getInsignificantNotPrecolored(gsimp);
 		while(n != null) {
+			if(removedEdges == null) {
+				removedEdges = new HashMap<>();
+			}
+			removedEdges.put(n, n.adj());
 			simplifiedNodes = new NodeList(n, simplifiedNodes);
 			NodeList n_adjs = n.adj();
 			while(n_adjs != null) {
@@ -415,9 +447,9 @@ public class LiveAnalysis{
 		}
 	}
 	
-	public static void print (LinkedHashMap<String, ArrayList<Instr>> assemInstrs) {
+	public static void print (LinkedHashMap<String, ArrayList<Instr>> assemInstrs, TempMap map) {
 		System.out.print("\t.text\n" + "\t.globl main\n");
-		TempMap registerMap = new RegisterMap(); 
+		TempMap registerMap = map;
 		Iterator<Entry<String, ArrayList<Instr>>> i = assemInstrs.entrySet().iterator();
 		while(i.hasNext()) {
 			Entry<String, ArrayList<Instr>> e = i.next();
