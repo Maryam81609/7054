@@ -1,11 +1,20 @@
 package RegAlloc;
 
 import java.util.*;
+import java.util.Map.Entry;
+import Assem.Instr;
 import Temp.*;
 import Graph.*;
+import Mips.MipsFrame;
 import FlowGraph.*;
 
 public class LiveAnalysis{
+	
+	public static HashMap<Temp, String> frameTempMap = null;
+	
+	private static HashMap<String, HashMap<Temp, String>> tempMaps = null;
+	
+	private final int regNum = 32;
 	
 	private static HashMap<String, LivenessGraph> livegs;
 	
@@ -19,6 +28,16 @@ public class LiveAnalysis{
 	
 	private LivenessGraph liveGraph;
 	
+	private HashMap<Temp, String> tempMap;
+	
+	// A stack maintaining the nodes removed from the graph during the simplification phase
+	private NodeList simplifiedNodes = null;
+	
+	// Represents which node in the simplifiedNodes stack is a potential spill
+	private HashMap<Node, Boolean> potSpills;
+	
+	private ArrayList<Temp> inUseRegs;
+	
 	public LiveAnalysis(FlowGraph g, String frameName) {
 		cfg = g;
 		liveGraph = createInterferGraph();
@@ -26,8 +45,40 @@ public class LiveAnalysis{
 			livegs = new HashMap<String, LivenessGraph>();
 		}
 		livegs.put(frameName, liveGraph);
+		
+		color();
+		
+		if(tempMaps == null) {
+			tempMaps = new HashMap<String, HashMap<Temp, String>>();
+		}
+		tempMaps.put(frameName, tempMap);
 	}
-
+	
+	public static HashMap<Temp, String> getTempMap(String frameName){
+		return tempMaps.get(frameName);
+	}
+	
+	public static void printTempMaps() {	
+		Iterator<Entry<String, HashMap<Temp, String>>> i = tempMaps.entrySet().iterator();
+		while(i.hasNext()) {
+			Entry<String, HashMap<Temp, String>> e = i.next();
+			System.out.println("frame: " + e.getKey());		
+			Iterator<Entry<Temp, String>> j = e.getValue().entrySet().iterator();
+			while(j.hasNext()) {
+				Entry<Temp, String> e2 = j.next();
+				System.out.println(e2.getKey() + " : " + e2.getValue());
+			}
+		}
+	}
+	
+	public void printTempMap() {		
+		Iterator<Entry<Temp, String>> i = tempMap.entrySet().iterator();
+		while(i.hasNext()) {
+			Entry<Temp, String> e = i.next();
+			System.out.println(e.getKey() + " : " + e.getValue());
+		}
+	}
+	
 	public LivenessGraph liveGraph() {
 		return this.liveGraph;
 	}
@@ -36,73 +87,7 @@ public class LiveAnalysis{
 		return livegs;
 	}
 	
-	LivenessGraph createInterferGraph() {
-		calcInOut();
-		LivenessGraph g = new LivenessGraph();
-		NodeList cfgNodes = cfg.nodes();
-		while(cfgNodes != null) {
-			Node n = cfgNodes.head;
-			//if(!cfg.isMove(n)) {
-				TempList nDefs = cfg.def(n);
-				while(nDefs != null) {
-					Temp varSrc = nDefs.head;
-					Node src = g.tnode(varSrc);
-					if(src == null) {
-						src = g.newNode(varSrc);
-					}
-					TempList liveOuts = out.get(n);
-					while(liveOuts != null) {
-						Temp varDest = liveOuts.head;
-						Node dest = g.tnode(varDest);
-						if(dest == null) {
-							dest = g.newNode(varDest);
-						}
-						if(src != dest && (!cfg.isMove(n) || (cfg.isMove(n) && !inList(varDest, n.instr().use())))) { 
-							if(!src.adj(dest)) {
-								g.addEdge(src, dest);
-							}
-						}
-						liveOuts = liveOuts.tail;
-					}
-					nDefs = nDefs.tail; 
-				//}
-			/*if(!cfg.isMove(n)) {
-				TempList nDefs = cfg.def(n);
-				while(nDefs != null) {
-					Temp varSrc = nDefs.head;
-					Node src = g.tnode(varSrc);
-					if(src == null) {
-						src = g.newNode(varSrc);
-					}
-					TempList liveOuts = out.get(n);
-					while(liveOuts != null) {
-						Temp varDest = liveOuts.head;
-						Node dest = g.tnode(varDest);
-						if(dest == null) {
-							dest = g.newNode(varDest);
-						}
-						if(src != dest) { 
-							g.addEdge(src, dest);
-						}
-						liveOuts = liveOuts.tail;
-					}
-					nDefs = nDefs.tail; 
-				}*/
-			}
-			cfgNodes = cfgNodes.tail;
-		}
-		return g;
-	}
-	
-	public NodeList reverse(NodeList nodes) {
-		  NodeList reverseNodes = null;
-		  while (nodes != null) {
-			  reverseNodes = new NodeList(nodes.head, reverseNodes);
-			  nodes = nodes.tail;
-		  }
-		  return reverseNodes;
-	  }
-	
+	/* Begin: Create Interference Graph */
 	void calcInOut() {
 		in = new HashMap<Node, TempList>();
 		out = new HashMap<Node, TempList>();
@@ -136,6 +121,196 @@ public class LiveAnalysis{
 		}while(!equal(in, in1) && !equal(out, out1));	
 	}
 	
+	LivenessGraph createInterferGraph() {
+		calcInOut();
+		LivenessGraph g = new LivenessGraph();
+		NodeList cfgNodes = cfg.nodes();
+		while(cfgNodes != null) {
+			Node n = cfgNodes.head;
+			TempList nDefs = cfg.def(n);
+			while(nDefs != null) {
+				Temp varSrc = nDefs.head;
+				Node src = g.tnode(varSrc);
+				if(src == null) {
+					src = g.newNode(varSrc);
+				}
+				TempList liveOuts = out.get(n);
+				while(liveOuts != null) {
+					Temp varDest = liveOuts.head;
+					Node dest = g.tnode(varDest);
+					if(dest == null) {
+						dest = g.newNode(varDest);
+					}
+					if(src != dest && (!cfg.isMove(n) || (cfg.isMove(n) && !inList(varDest, n.instr().use())))) { 
+						if(!src.adj(dest)) {
+							g.addEdge(src, dest);
+						}
+					}
+					liveOuts = liveOuts.tail;
+				}
+				nDefs = nDefs.tail; 
+			}
+			cfgNodes = cfgNodes.tail;
+		}
+		return g;
+	}
+	/* End: Create Interference Graph */
+	
+	/* Begin: Coloring */
+	void color() {
+		this.potSpills = new HashMap<Node, Boolean>();
+		LivenessGraph gsimp = liveGraph;
+		Node n;
+		do {
+			n = getInsignificantNotPrecolored(gsimp);
+			if(n != null) {
+				gsimp = simplify(gsimp);
+			}
+			n = getNotPrecolored(gsimp);
+			if(n != null) {
+				gsimp = spill(gsimp);
+			} 
+		} while(n != null);
+		
+		NodeList gsimp_nodes1 = gsimp.nodes();
+		NodeList gsimp_nodes = gsimp_nodes1;
+		inUseRegs = new ArrayList<Temp>();
+		tempMap = new HashMap<Temp, String>();
+		MipsFrame f = new MipsFrame();
+		while(gsimp_nodes != null) {
+			Node m = gsimp_nodes.head;
+			Temp m_temp = gsimp.gtemp(m); 
+			tempMap.put(m_temp, f.tempMap(m_temp));
+			inUseRegs.add(m_temp); 
+			gsimp_nodes = gsimp_nodes.tail;
+		}
+		select(gsimp);
+	}
+	
+	/* Begin: Select */
+	void select(LivenessGraph gsimp) {
+		NodeList stack = simplifiedNodes;
+		while(stack != null) {
+			Node selectedNode = stack.head;
+			if(!colorable(selectedNode, gsimp)) {
+				throw new Error("**********SPILL**********");
+			}
+			Temp selectedReg = getaFreeReg();
+			tempMap.put(gsimp.gtemp(selectedNode), (new MipsFrame()).tempMap(selectedReg));
+			inUseRegs.add(selectedReg);			
+			stack = stack.tail;
+		}		
+	}
+	
+	Temp getaFreeReg() {
+		ArrayList<Temp> regs = MipsFrame.availableRegs();
+		regs.removeAll(inUseRegs);
+		return regs.get(0);
+	}
+	
+	boolean colorable(Node node, LivenessGraph ig){
+		NodeList node_adjs = node.adj(); 
+		if(node.len(node_adjs) < regNum) {
+			return true;
+		}
+		Set<String> usedRegs = new HashSet<String>();
+		while(node_adjs != null) {
+			Node adj = node_adjs.head;
+			usedRegs.add(tempMap.get(ig.gtemp(adj)));
+			node_adjs = node_adjs.tail;
+		}
+		return (usedRegs.size() < regNum);
+	}
+	
+	/* End: Select */
+	
+	/* Begin: Spill */
+	LivenessGraph spill(LivenessGraph g) {
+		LivenessGraph gsimp = g;
+		Node n = getNotPrecolored(gsimp);
+		potSpills.put(n, true);
+		simplifiedNodes = new NodeList(n, simplifiedNodes);
+		NodeList n_adjs = n.adj();
+		while(n_adjs != null) {
+			Node adj = n_adjs.head;
+			if(n.comesFrom(adj)) {
+				gsimp.rmEdge(adj, n);
+			}
+			else if(n.goesTo(adj)) {
+				gsimp.rmEdge(n, adj);
+			}
+			n_adjs = n_adjs.tail;
+		}
+		return gsimp;
+	}
+	
+	Node getNotPrecolored(LivenessGraph g) {
+		Node ret = null;
+		NodeList nodes = g.nodes();
+		while(nodes != null) {
+			Node n = nodes.head;
+			if(!g.isPrecolored(n) && n.degree() > 0) {
+				ret = n;
+				break;
+			}
+			nodes = nodes.tail;
+		}
+		return ret;
+	}
+	
+	/* End: Spill */
+	
+	/* Begin: Simplify Interference Graph */
+	
+	LivenessGraph simplify(LivenessGraph g) {
+		LivenessGraph ret = null;
+		LivenessGraph gsimp = g;
+		Node n = getInsignificantNotPrecolored(gsimp);
+		while(n != null) {
+			simplifiedNodes = new NodeList(n, simplifiedNodes);
+			NodeList n_adjs = n.adj();
+			while(n_adjs != null) {
+				Node adj = n_adjs.head;
+				if(n.comesFrom(adj)) {
+					gsimp.rmEdge(adj, n);
+				}
+				else if(n.goesTo(adj)) {
+					gsimp.rmEdge(n, adj);
+				}
+				n_adjs = n_adjs.tail;
+			}
+			n = getInsignificantNotPrecolored(gsimp);
+		}
+		ret = gsimp;
+		return ret;
+	}
+	
+	private Node getInsignificantNotPrecolored(LivenessGraph g) {
+		Node ret = null;
+		NodeList nodes = g.nodes();
+		while(nodes != null) {
+			Node n = nodes.head;
+			if(!g.isPrecolored(n) && n.degree() > 0 && n.degree() < regNum) {
+				ret = n;
+				break;
+			}
+			nodes = nodes.tail;
+		}
+		return ret;
+	}
+	
+	/* End: Simplify Interference Graph */
+	/* End: Coloring */
+	
+	// Auxiliary Methods
+	public NodeList reverse(NodeList nodes) {
+		  NodeList reverseNodes = null;
+		  while (nodes != null) {
+			  reverseNodes = new NodeList(nodes.head, reverseNodes);
+			  nodes = nodes.tail;
+		  }
+		  return reverseNodes;
+	  }
 
 	private boolean equal(TempList l1, TempList l2) {
 		if(l1 == null && l2 == null) {
@@ -236,9 +411,25 @@ public class LiveAnalysis{
 		Iterator<Map.Entry<String, LivenessGraph>> it = livegs.entrySet().iterator();
 		while(it.hasNext()) {
 			LivenessGraph lg = ((Map.Entry<String, LivenessGraph>)it.next()).getValue();
-			lg.show(System.out);//, map);
+			lg.show(System.out);
 		}
-		
+	}
+	
+	public static void print (LinkedHashMap<String, ArrayList<Instr>> assemInstrs) {
+		System.out.print("\t.text\n" + "\t.globl main\n");
+		TempMap registerMap = new RegisterMap(); 
+		Iterator<Entry<String, ArrayList<Instr>>> i = assemInstrs.entrySet().iterator();
+		while(i.hasNext()) {
+			Entry<String, ArrayList<Instr>> e = i.next();
+			String frameName = e.getKey();
+			ArrayList<Instr> frameInstrs = e.getValue();
+			frameTempMap = tempMaps.get(frameName);
+			for (Instr instr : frameInstrs) {
+				System.out.println(instr.format(registerMap));
+			}
+		}
+		frameTempMap = null;
+		System.out.println("\n # MiniJava Library\n" + (new MipsFrame()).mjLibrary());
 	}
 	
 }

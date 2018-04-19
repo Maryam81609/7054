@@ -33,7 +33,7 @@ public class Node {
     }
     public NodeList adj() {return cat(succ(), pred());}
 
-    int len(NodeList l) {
+    public int len(NodeList l) {
 	int i=0;
 	for(NodeList p=l; p!=null; p=p.tail) i++;
 	return i;

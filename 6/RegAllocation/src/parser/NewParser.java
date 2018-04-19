@@ -17,8 +17,10 @@ import Tree.StmList;
 import IR_visitor.GenCVisitor;
 import IR_visitor.TempVisitor;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.SortedMap;
 import java.util.Vector;
 import java.io.File;
 import java.io.FileInputStream;
@@ -60,9 +62,11 @@ public class NewParser implements NewParserConstants {
                 TempVisitor gen;
                 Temp.TempMap map;
                 MipsFrame frame;
-                if(frag != null) {
+                LinkedHashMap<String, ArrayList<Instr>> assemInstrs = new LinkedHashMap<String, ArrayList<Instr>>();;
+                /*if(frag != null) {
                 	System.out.print("\t.text\n" + "\t.globl main\n");
-                }
+                }*/
+                
                 while(frag != null)
                 {
                 	ProcFrag pf = (ProcFrag) frag;
@@ -83,17 +87,22 @@ public class NewParser implements NewParserConstants {
                     // Create CFG for the frag
                     CFGGenerator fragCfgGen = new CFGGenerator(frame.name.toString());
                     	
+                    ArrayList<Instr> fragInstrList = new ArrayList<Instr>();
+                    
             		InstrList proInstrs = gen.prologue();
+            		fragInstrList.addAll(proInstrs.toList());
             		//proInstrs.print(map);
+            		
             		// Create CFG Nodes for prologue
             		fragCfgGen.createNodes(proInstrs);
             		
             		Tree.StmList stms = t.stms;
             		while(stms != null) {
             			InstrList instrLst = gen.codegen(stms.head);
-            			if(instrLst != null) {
-            				//instrLst.print(map);
-            			}
+            			fragInstrList.addAll(instrLst.toList());
+            			/*if(instrLst != null) {
+            				instrLst.print(map);
+            			}*/
             			
             			// Create CFG Nodes for function body
             			fragCfgGen.createNodes(instrLst);
@@ -101,7 +110,10 @@ public class NewParser implements NewParserConstants {
                			stms = stms.tail;
             		}
             		InstrList epiInstrs = gen.epilogue();
+            		fragInstrList.addAll(epiInstrs.toList());
             		//epiInstrs.print(map);
+            		
+            		assemInstrs.put(frame.name.toString(), fragInstrList);
             		
             		// Create CFG Nodes for epilogue
             		fragCfgGen.createNodes(epiInstrs);
@@ -114,11 +126,14 @@ public class NewParser implements NewParserConstants {
             		
             		frag = frag.next;
                 }
-                System.out.println("\n # MiniJava Library\n" + (new MipsFrame()).mjLibrary());
+                //System.out.println("\n # MiniJava Library\n" + (new MipsFrame()).mjLibrary());
                 /*
                 g.print();*/
-                CFGGenerator.show(new Temp.RegMap(new MipsFrame()));
-                LiveAnalysis.show(new Temp.RegMap(new MipsFrame()));
+                //LiveAnalysis.printTempMaps();
+                //CFGGenerator.show(new Temp.RegMap(new MipsFrame()));
+                //LiveAnalysis.show(new Temp.RegMap(new MipsFrame()));
+                
+                LiveAnalysis.print(assemInstrs);
                 
     }
     catch(ParseException e){
